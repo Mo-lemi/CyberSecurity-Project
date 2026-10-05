@@ -45,6 +45,8 @@ Decisions are recorded as they are made, with the reasoning behind them.
 4. **SQLite.** A single-file database with no server to configure or expose. All queries will use parameters, never string concatenation, to prevent SQL injection.
 5. **argon2 for passwords.** Passwords are never stored, only slow, salted hashes. Argon2 is the algorithm currently recommended by OWASP for password storage.
 6. **Threat model before code.** Writing the STRIDE threat model first means the security controls are designed in from the start rather than added afterwards.
+7. **Pinned dependency versions.** `requirements.txt` lists exact versions (e.g. `Flask==3.1.3`), so every install gets the same code. A new release can't silently change the app's behaviour, and pip-audit can check those exact versions against known vulnerabilities. Dependencies are added only when a feature needs them.
+8. **Secrets and databases stay out of Git.** `.gitignore` excludes `.env` files, the `instance/` folder and database files. Anything pushed to a public repo should be treated as exposed forever, even if it is deleted later.
 
 ## Roadmap
 
