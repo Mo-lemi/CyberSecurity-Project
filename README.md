@@ -80,3 +80,5 @@ Then open http://127.0.0.1:5000.
 ## Author
 
 Molemi Molokoane
+
+Elective submission verification code: `WTC-KWQHUQ77`
