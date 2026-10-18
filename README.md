@@ -49,6 +49,7 @@ Decisions are recorded as they are made, with the reasoning behind them.
 8. **Secrets and databases stay out of Git.** `.gitignore` excludes `.env` files, the `instance/` folder and database files. Anything pushed to a public repo should be treated as exposed forever, even if it is deleted later.
 9. **Application factory (`create_app()`).** The app is built inside a function instead of at import time. Tests can create a fresh app with test settings (e.g. a temporary database), and nothing is configured until it is needed.
 10. **Debug mode only on localhost.** Flask's debug mode shows an interactive debugger in the browser when an error occurs, which lets anyone who can reach the page run Python code on the server. It is only used locally, and the dev server listens on `127.0.0.1`, so other machines can't reach it.
+11. **`SECRET_KEY` from the environment, and the app refuses to start without it.** Flask signs session cookies with this key, so anyone who knows it can forge a login as any user (threat S3). It lives in a git-ignored `.env` file, with a committed `.env.example` showing the format. There is deliberately **no fallback default** like `"dev"`: a default would be public in the repo, and the app could silently run with it in production.
 
 ## Roadmap
 
@@ -69,7 +70,12 @@ python -m venv .venv
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Run the development server
+# 3. Create your local .env with a random secret key
+Copy-Item .env.example .env
+python -c "import secrets; print(secrets.token_hex(32))"
+# ...then paste the printed value into .env as SECRET_KEY=<value>
+
+# 4. Run the development server
 flask --app securenotes run --debug
 ```
 
