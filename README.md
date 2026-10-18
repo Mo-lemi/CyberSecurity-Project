@@ -20,7 +20,7 @@ A small note-taking web app built **security-first**: users register, log in, wr
 
 | Activity | What it means here | Status |
 |---|---|---|
-| **Threat modelling (STRIDE)** | Identify threats to the app *before* writing code, and decide how each one is handled | Planned |
+| **Threat modelling (STRIDE)** | Identify threats to the app *before* writing code, and decide how each one is handled. See [docs/threat-model.md](docs/threat-model.md) | v1 done |
 | **OWASP Top 10** | Map each relevant OWASP risk to the defence used in the app | Planned |
 | **Secure coding** | Password hashing, CSRF protection, output escaping, parameterised SQL, access checks on every note | Planned |
 | **DevSecOps** | GitHub Actions runs tests, a code security scanner (Bandit) and a dependency vulnerability check (pip-audit) on every push | Planned |
