@@ -103,7 +103,7 @@ A trust boundary is where data crosses from something we don't control into some
 | ID | Threat | Attacker | Defence | Status |
 |---|---|---|---|---|
 | T1 | User edits or deletes a note they don't own | A2, A5 | **Owner check** on every edit and delete; shared users are read-only | ⬜ |
-| T2 | Malicious site submits forms as the logged-in user (CSRF) | A6 | **CSRF token** on every form (Flask-WTF); `SameSite` cookies | ⬜ |
+| T2 | Malicious site submits forms as the logged-in user (CSRF) | A6 | **CSRF token** on every form (Flask-WTF `CSRFProtect`, applied app-wide); `SameSite` cookies | ✅ (tokens; cookies next) |
 | T3 | Input changes the meaning of a SQL query (SQL injection) | A7 | **Parameterised queries only**, never string concatenation | ⬜ |
 | T4 | Vulnerable or compromised package changes app behaviour | A8 | **Pinned versions**; **pip-audit** in CI checks for known vulnerabilities | ⬜ |
 

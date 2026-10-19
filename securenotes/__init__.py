@@ -1,6 +1,7 @@
 import os
 
-from flask import Flask
+from flask import Flask, render_template
+from flask_wtf.csrf import CSRFProtect
 
 
 def create_app(test_config=None):
@@ -30,8 +31,12 @@ def create_app(test_config=None):
 
     db.init_app(app)
 
+    # Every POST request must carry a valid CSRF token, or it is rejected
+    # with "400 Bad Request" (threat T2). Applied app-wide so no form can be forgotten.
+    CSRFProtect(app)
+
     @app.route("/")
     def index():
-        return "SecureNotes is running."
+        return render_template("index.html")
 
     return app

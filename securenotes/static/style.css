@@ -1,0 +1,45 @@
+body {
+  font-family: system-ui, sans-serif;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+  line-height: 1.5;
+  color: #1f2328;
+}
+
+header {
+  padding: 1rem 0;
+  border-bottom: 1px solid #d0d7de;
+  margin-bottom: 1.5rem;
+}
+
+.brand {
+  font-weight: bold;
+  text-decoration: none;
+  color: inherit;
+}
+
+.flash {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: #fff8c5;
+  border: 1px solid #d4a72c;
+}
+
+label {
+  display: block;
+  margin-top: 0.75rem;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  padding: 0.4rem;
+  box-sizing: border-box;
+}
+
+button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}

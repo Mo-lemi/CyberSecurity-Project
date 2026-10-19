@@ -52,6 +52,8 @@ Decisions are recorded as they are made, with the reasoning behind them.
 11. **`SECRET_KEY` from the environment, and the app refuses to start without it.** Flask signs session cookies with this key, so anyone who knows it can forge a login as any user (threat S3). It lives in a git-ignored `.env` file, with a committed `.env.example` showing the format. There is deliberately **no fallback default** like `"dev"`: a default would be public in the repo, and the app could silently run with it in production.
 12. **Usernames instead of email addresses.** The app never sends email (there is no password reset, see the [threat model](docs/threat-model.md)), so collecting emails would only mean storing personal data it doesn't need. If the database ever leaked, usernames reveal far less about real people. Usernames are case-insensitive (`COLLATE NOCASE`), so nobody can register `Alice` to impersonate `alice`.
 13. **One database connection per request.** `get_db()` opens a connection the first time a request needs it and `close_db()` always closes it when the request ends, so connections never leak or get shared between users' requests. Foreign keys are switched on for every connection, because SQLite ignores them by default.
+14. **CSRF protection is switched on for the whole app, not per form.** `CSRFProtect` rejects *every* POST request that lacks a valid token, so a new form can't accidentally be left unprotected. It was added *before* the first form existed, so no form was ever unprotected (threat T2).
+15. **No inline CSS or JavaScript.** All styling lives in `static/style.css`. That makes it possible to add a strict Content-Security-Policy later that blocks inline scripts, a second layer of defence against XSS (threat I3).
 
 ## Roadmap
 
