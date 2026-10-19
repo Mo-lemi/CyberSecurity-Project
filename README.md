@@ -10,7 +10,7 @@ A small note-taking web app built **security-first**: users register, log in, wr
 
 ## Features (planned)
 
-- [ ] User registration and login
+- [x] User registration and login
 - [ ] Create, view, edit and delete private notes
 - [ ] Share a note with another user (read-only)
 - [ ] Rate-limited login to slow down password guessing
@@ -57,6 +57,10 @@ Decisions are recorded as they are made, with the reasoning behind them.
 16. **argon2id with the library's default settings.** `argon2-cffi`'s defaults follow RFC 9106 (64 MiB of memory, 3 passes), which makes each guess slow and memory-hungry for an attacker with a stolen database. Each hash includes its own random salt, so two users with the same password get different hashes. Passwords must be 12–128 characters: long enough to resist guessing, and capped so nobody can send a huge password to slow the server down.
 17. **Duplicate usernames are caught by the database, not by checking first.** Running `SELECT` and then `INSERT` leaves a gap where two people could register the same name at once. Instead, the `UNIQUE` constraint rejects the duplicate and the app catches the error. The database is the single source of truth.
 18. **"Username taken" is an accepted risk.** Registration has to tell people a name is in use, which also reveals that the account exists (user enumeration). The login page will still give one generic error, and rate limiting will slow down bulk checking. This is recorded under threat S5.
+19. **One vague login error, and equal timing.** Login always says "Invalid username or password", never *which* one was wrong. Checking an argon2 hash takes about 70 ms, so skipping the check for unknown usernames would make them respond noticeably faster, and an attacker could time the responses to find real accounts. Unknown usernames are therefore checked against a dummy hash, so both cases take the same time.
+20. **Hardened session cookie.** `HttpOnly` (JavaScript can't read it, so XSS can't steal it), `SameSite=Lax` (not sent with forms from other sites) and `Secure` (HTTPS only). `Secure` is **on by default** and can only be turned off explicitly in `.env` for local development. If the setting is forgotten, the app fails safe: logins stop working over plain http rather than cookies leaking.
+21. **The session is cleared on login and logout.** Nothing stored in the session before login carries over afterwards (session fixation, threat S4).
+22. **Logout is a POST request.** If logout were a plain link (GET), any website could log users out by embedding `<img src=".../auth/logout">`. As a POST, it requires a CSRF token.
 
 ## Roadmap
 
@@ -81,6 +85,7 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 python -c "import secrets; print(secrets.token_hex(32))"
 # ...then paste the printed value into .env as SECRET_KEY=<value>
+# and keep SESSION_COOKIE_SECURE=false (local http only)
 
 # 4. Create the database (WARNING: re-running this deletes all data)
 flask --app securenotes init-db

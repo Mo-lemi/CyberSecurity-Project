@@ -11,7 +11,16 @@
   <header>
     <a class="brand" href="{{ url_for('index') }}">🔒 SecureNotes</a>
     <nav>
-      <a href="{{ url_for('auth.register') }}">Register</a>
+      {% if g.user %}
+        <span>Signed in as <strong>{{ g.user["username"] }}</strong></span>
+        <form class="inline" method="post" action="{{ url_for('auth.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit">Log out</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}">Log in</a>
+        <a href="{{ url_for('auth.register') }}">Register</a>
+      {% endif %}
     </nav>
   </header>
 

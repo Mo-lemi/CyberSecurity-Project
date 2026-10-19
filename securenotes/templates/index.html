@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>Welcome to SecureNotes</h1>
+  <h1>Welcome{% if g.user %}, {{ g.user["username"] }}{% endif %}</h1>
   <p>Private notes, built security-first.</p>
 {% endblock %}

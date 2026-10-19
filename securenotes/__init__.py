@@ -11,6 +11,16 @@ def create_app(test_config=None):
     # Defaults; tests can override any of these through test_config.
     app.config["DATABASE"] = os.path.join(app.instance_path, "securenotes.sqlite")
 
+    # Session cookie hardening (threat S2):
+    # HttpOnly - JavaScript can't read the cookie, so an XSS bug can't steal it.
+    # SameSite=Lax - the browser won't attach it to forms submitted from other sites.
+    # Secure - only sent over HTTPS. On by default; .env turns it off for local http.
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = (
+        os.environ.get("SESSION_COOKIE_SECURE", "true").lower() != "false"
+    )
+
     if test_config is None:
         # Normal run: the secret comes from the environment (.env), never from code.
         app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")

@@ -93,17 +93,17 @@ A trust boundary is where data crosses from something we don't control into some
 | ID | Threat | Attacker | Defence | Status |
 |---|---|---|---|---|
 | S1 | Attacker guesses or reuses a user's password | A1, A3, A4 | Minimum password length; **rate limiting** on login | ⬜ |
-| S2 | Attacker steals a session cookie | A1, A5 | Cookie flags `HttpOnly` (JavaScript can't read it), `SameSite=Lax`, and `Secure` in production (sent over HTTPS only) | ⬜ |
+| S2 | Attacker steals a session cookie | A1, A5 | Cookie flags `HttpOnly` (JavaScript can't read it), `SameSite=Lax`, and `Secure` in production (sent over HTTPS only) | ✅ |
 | S3 | Attacker forges a session cookie | A1 | Cookies are signed with a strong random `SECRET_KEY` kept out of Git | ⬜ |
-| S4 | Attacker plants a session ID before the victim logs in (session fixation) | A1 | Clear the session completely on login and logout | ⬜ |
-| S5 | Attacker discovers which usernames have accounts (user enumeration) | A3, A4 | The same generic "Invalid username or password" message whether the username exists or not. **Accepted risk:** registration must say "username taken", which also reveals that the account exists; rate limiting will slow down anyone checking usernames in bulk. | ⬜ |
+| S4 | Attacker plants a session ID before the victim logs in (session fixation) | A1 | Clear the session completely on login and logout | ✅ |
+| S5 | Attacker discovers which usernames have accounts (user enumeration) | A3, A4 | The same generic "Invalid username or password" message whether the username exists or not. **Accepted risk:** registration must say "username taken", which also reveals that the account exists; rate limiting will slow down anyone checking usernames in bulk. Login also checks a dummy hash for unknown usernames, so response *time* doesn't reveal them either. | ✅ (login) |
 
 ### T: Tampering (changing data without permission)
 
 | ID | Threat | Attacker | Defence | Status |
 |---|---|---|---|---|
 | T1 | User edits or deletes a note they don't own | A2, A5 | **Owner check** on every edit and delete; shared users are read-only | ⬜ |
-| T2 | Malicious site submits forms as the logged-in user (CSRF) | A6 | **CSRF token** on every form (Flask-WTF `CSRFProtect`, applied app-wide); `SameSite` cookies | ✅ (tokens; cookies next) |
+| T2 | Malicious site submits forms as the logged-in user (CSRF) | A6 | **CSRF token** on every form (Flask-WTF `CSRFProtect`, applied app-wide); `SameSite=Lax` cookies; logout is POST-only | ✅ |
 | T3 | Input changes the meaning of a SQL query (SQL injection) | A7 | **Parameterised queries only**, never string concatenation | ✅ (registration) |
 | T4 | Vulnerable or compromised package changes app behaviour | A8 | **Pinned versions**; **pip-audit** in CI checks for known vulnerabilities | ⬜ |
 

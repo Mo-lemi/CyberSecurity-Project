@@ -20,6 +20,15 @@ nav a {
   margin-left: 1rem;
 }
 
+form.inline {
+  display: inline;
+  margin-left: 1rem;
+}
+
+form.inline button {
+  margin-top: 0;
+}
+
 .brand {
   font-weight: bold;
   text-decoration: none;
