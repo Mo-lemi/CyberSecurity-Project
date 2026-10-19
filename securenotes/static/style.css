@@ -11,6 +11,13 @@ header {
   padding: 1rem 0;
   border-bottom: 1px solid #d0d7de;
   margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav a {
+  margin-left: 1rem;
 }
 
 .brand {

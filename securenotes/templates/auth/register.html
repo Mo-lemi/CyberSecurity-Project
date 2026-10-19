@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Register · SecureNotes{% endblock %}
+
+{% block content %}
+  <h1>Create an account</h1>
+
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="username">Username</label>
+    <input id="username" name="username" required minlength="3" maxlength="30"
+           autocomplete="username" value="{{ request.form.get('username', '') }}">
+
+    <label for="password">Password (at least 12 characters)</label>
+    <input id="password" name="password" type="password" required minlength="12" maxlength="128"
+           autocomplete="new-password">
+
+    <label for="confirm">Confirm password</label>
+    <input id="confirm" name="confirm" type="password" required minlength="12" maxlength="128"
+           autocomplete="new-password">
+
+    <button type="submit">Register</button>
+  </form>
+{% endblock %}

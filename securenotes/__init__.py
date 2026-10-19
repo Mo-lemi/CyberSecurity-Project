@@ -35,6 +35,10 @@ def create_app(test_config=None):
     # with "400 Bad Request" (threat T2). Applied app-wide so no form can be forgotten.
     CSRFProtect(app)
 
+    from . import auth
+
+    app.register_blueprint(auth.bp)
+
     @app.route("/")
     def index():
         return render_template("index.html")

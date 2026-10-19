@@ -54,6 +54,9 @@ Decisions are recorded as they are made, with the reasoning behind them.
 13. **One database connection per request.** `get_db()` opens a connection the first time a request needs it and `close_db()` always closes it when the request ends, so connections never leak or get shared between users' requests. Foreign keys are switched on for every connection, because SQLite ignores them by default.
 14. **CSRF protection is switched on for the whole app, not per form.** `CSRFProtect` rejects *every* POST request that lacks a valid token, so a new form can't accidentally be left unprotected. It was added *before* the first form existed, so no form was ever unprotected (threat T2).
 15. **No inline CSS or JavaScript.** All styling lives in `static/style.css`. That makes it possible to add a strict Content-Security-Policy later that blocks inline scripts, a second layer of defence against XSS (threat I3).
+16. **argon2id with the library's default settings.** `argon2-cffi`'s defaults follow RFC 9106 (64 MiB of memory, 3 passes), which makes each guess slow and memory-hungry for an attacker with a stolen database. Each hash includes its own random salt, so two users with the same password get different hashes. Passwords must be 12–128 characters: long enough to resist guessing, and capped so nobody can send a huge password to slow the server down.
+17. **Duplicate usernames are caught by the database, not by checking first.** Running `SELECT` and then `INSERT` leaves a gap where two people could register the same name at once. Instead, the `UNIQUE` constraint rejects the duplicate and the app catches the error. The database is the single source of truth.
+18. **"Username taken" is an accepted risk.** Registration has to tell people a name is in use, which also reveals that the account exists (user enumeration). The login page will still give one generic error, and rate limiting will slow down bulk checking. This is recorded under threat S5.
 
 ## Roadmap
 

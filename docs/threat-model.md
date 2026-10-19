@@ -96,7 +96,7 @@ A trust boundary is where data crosses from something we don't control into some
 | S2 | Attacker steals a session cookie | A1, A5 | Cookie flags `HttpOnly` (JavaScript can't read it), `SameSite=Lax`, and `Secure` in production (sent over HTTPS only) | ⬜ |
 | S3 | Attacker forges a session cookie | A1 | Cookies are signed with a strong random `SECRET_KEY` kept out of Git | ⬜ |
 | S4 | Attacker plants a session ID before the victim logs in (session fixation) | A1 | Clear the session completely on login and logout | ⬜ |
-| S5 | Attacker discovers which usernames have accounts (user enumeration) | A3, A4 | The same generic "Invalid username or password" message whether the username exists or not | ⬜ |
+| S5 | Attacker discovers which usernames have accounts (user enumeration) | A3, A4 | The same generic "Invalid username or password" message whether the username exists or not. **Accepted risk:** registration must say "username taken", which also reveals that the account exists; rate limiting will slow down anyone checking usernames in bulk. | ⬜ |
 
 ### T: Tampering (changing data without permission)
 
@@ -104,7 +104,7 @@ A trust boundary is where data crosses from something we don't control into some
 |---|---|---|---|---|
 | T1 | User edits or deletes a note they don't own | A2, A5 | **Owner check** on every edit and delete; shared users are read-only | ⬜ |
 | T2 | Malicious site submits forms as the logged-in user (CSRF) | A6 | **CSRF token** on every form (Flask-WTF `CSRFProtect`, applied app-wide); `SameSite` cookies | ✅ (tokens; cookies next) |
-| T3 | Input changes the meaning of a SQL query (SQL injection) | A7 | **Parameterised queries only**, never string concatenation | ⬜ |
+| T3 | Input changes the meaning of a SQL query (SQL injection) | A7 | **Parameterised queries only**, never string concatenation | ✅ (registration) |
 | T4 | Vulnerable or compromised package changes app behaviour | A8 | **Pinned versions**; **pip-audit** in CI checks for known vulnerabilities | ⬜ |
 
 ### R: Repudiation (denying an action)
@@ -120,7 +120,7 @@ A trust boundary is where data crosses from something we don't control into some
 | I1 | User reads a note by changing its ID in the URL (**IDOR**) | A2, A3 | Every note lookup checks *"is this user the owner, or has the note been shared with them?"* | ⬜ |
 | I2 | App reveals that a note exists even when access is denied | A2, A3 | Return **404 Not Found** (not 403 Forbidden) for notes the user can't access, so attackers can't tell "exists but forbidden" from "doesn't exist" | ⬜ |
 | I3 | Script hidden in a shared note runs in the victim's browser (**XSS**) | A5 | Jinja2 **auto-escaping**; **Content-Security-Policy** header as a second layer | ⬜ |
-| I4 | Passwords leak if the database is stolen | A7 | Store **argon2 hashes** only, never the passwords themselves | ⬜ |
+| I4 | Passwords leak if the database is stolen | A7 | Store **argon2id hashes** only, never the passwords themselves | ✅ |
 | I5 | Error pages reveal code, paths or settings | All | Debug mode off outside local development; generic error pages | ⬜ |
 | I6 | `SECRET_KEY` or the database is committed to the public repo | All | `.gitignore` excludes `.env`, `instance/` and database files | ✅ |
 | I7 | App is loaded in a hidden frame on another site to trick clicks (clickjacking) | A6 | `X-Frame-Options: DENY` / CSP `frame-ancestors 'none'` | ⬜ |
