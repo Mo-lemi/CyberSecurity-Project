@@ -50,6 +50,8 @@ Decisions are recorded as they are made, with the reasoning behind them.
 9. **Application factory (`create_app()`).** The app is built inside a function instead of at import time. Tests can create a fresh app with test settings (e.g. a temporary database), and nothing is configured until it is needed.
 10. **Debug mode only on localhost.** Flask's debug mode shows an interactive debugger in the browser when an error occurs, which lets anyone who can reach the page run Python code on the server. It is only used locally, and the dev server listens on `127.0.0.1`, so other machines can't reach it.
 11. **`SECRET_KEY` from the environment, and the app refuses to start without it.** Flask signs session cookies with this key, so anyone who knows it can forge a login as any user (threat S3). It lives in a git-ignored `.env` file, with a committed `.env.example` showing the format. There is deliberately **no fallback default** like `"dev"`: a default would be public in the repo, and the app could silently run with it in production.
+12. **Usernames instead of email addresses.** The app never sends email (there is no password reset, see the [threat model](docs/threat-model.md)), so collecting emails would only mean storing personal data it doesn't need. If the database ever leaked, usernames reveal far less about real people. Usernames are case-insensitive (`COLLATE NOCASE`), so nobody can register `Alice` to impersonate `alice`.
+13. **One database connection per request.** `get_db()` opens a connection the first time a request needs it and `close_db()` always closes it when the request ends, so connections never leak or get shared between users' requests. Foreign keys are switched on for every connection, because SQLite ignores them by default.
 
 ## Roadmap
 
@@ -75,7 +77,10 @@ Copy-Item .env.example .env
 python -c "import secrets; print(secrets.token_hex(32))"
 # ...then paste the printed value into .env as SECRET_KEY=<value>
 
-# 4. Run the development server
+# 4. Create the database (WARNING: re-running this deletes all data)
+flask --app securenotes init-db
+
+# 5. Run the development server
 flask --app securenotes run --debug
 ```
 

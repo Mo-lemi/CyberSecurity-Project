@@ -1,6 +1,6 @@
 # SecureNotes Threat Model (STRIDE)
 
-**Version:** 1.0 (18 October 2026), written before any feature code
+**Version:** 1.1 (19 October 2026). v1.0 was written before any feature code
 **Method:** [STRIDE](https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats): Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege
 
 This document answers four questions:
@@ -72,7 +72,7 @@ A trust boundary is where data crosses from something we don't control into some
 | A1 | **Account thief** | Take over a user's account by guessing or reusing their password, or stealing their session cookie |
 | A2 | **Snoop** | Read other people's private notes, e.g. by changing the note ID in the URL |
 | A3 | **Stalker** | Target *one specific person* to learn where they will be and when. Patient, motivated and personal. The harm can be physical, not just digital. |
-| A4 | **Credential-stuffing bot** | Automatically try leaked email/password pairs from other breaches |
+| A4 | **Credential-stuffing bot** | Automatically try leaked username/password pairs from other breaches |
 | A5 | **Malicious user of the app** | Attack *other* users, e.g. by hiding a script in a shared note |
 | A6 | **Malicious website** | Trick a logged-in user's browser into performing actions in SecureNotes |
 | A7 | **Database attacker** | Dump all data at once through SQL injection or by stealing the database file |
@@ -96,7 +96,7 @@ A trust boundary is where data crosses from something we don't control into some
 | S2 | Attacker steals a session cookie | A1, A5 | Cookie flags `HttpOnly` (JavaScript can't read it), `SameSite=Lax`, and `Secure` in production (sent over HTTPS only) | ⬜ |
 | S3 | Attacker forges a session cookie | A1 | Cookies are signed with a strong random `SECRET_KEY` kept out of Git | ⬜ |
 | S4 | Attacker plants a session ID before the victim logs in (session fixation) | A1 | Clear the session completely on login and logout | ⬜ |
-| S5 | Attacker discovers which emails have accounts (user enumeration) | A3, A4 | The same generic "Invalid email or password" message whether the email exists or not | ⬜ |
+| S5 | Attacker discovers which usernames have accounts (user enumeration) | A3, A4 | The same generic "Invalid username or password" message whether the username exists or not | ⬜ |
 
 ### T: Tampering (changing data without permission)
 
@@ -155,6 +155,7 @@ As defences are built and tested, the status columns above will be updated.
 
 ## Assumptions and out of scope
 
+- **Usernames, not emails.** The app never sends email, so it doesn't collect email addresses. Storing less personal data means a database leak reveals less about real people (data minimisation, relevant to A3 and A7).
 - **No password reset by email.** This is a deliberate choice: password reset flows are a common source of account takeovers, and leaving the feature out removes that risk. The trade-off is that a user who forgets their password loses access.
 - **No admin role.** With no admin accounts, there are no admin privileges for an attacker to gain.
 - **HTTPS** is assumed in any real deployment. Locally, the app runs over plain HTTP on `127.0.0.1` only.
@@ -166,3 +167,4 @@ As defences are built and tested, the status columns above will be updated.
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 18 Oct 2026 | First version, written before feature code |
+| 1.1 | 19 Oct 2026 | Switched accounts from email to username (data minimisation); updated A4 and S5 |

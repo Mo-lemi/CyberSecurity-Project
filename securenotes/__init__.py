@@ -7,6 +7,9 @@ def create_app(test_config=None):
     """Build and configure the Flask app (the "application factory" pattern)."""
     app = Flask(__name__, instance_relative_config=True)
 
+    # Defaults; tests can override any of these through test_config.
+    app.config["DATABASE"] = os.path.join(app.instance_path, "securenotes.sqlite")
+
     if test_config is None:
         # Normal run: the secret comes from the environment (.env), never from code.
         app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
@@ -22,6 +25,10 @@ def create_app(test_config=None):
 
     # The instance folder holds local-only files like the database (git-ignored).
     os.makedirs(app.instance_path, exist_ok=True)
+
+    from . import db
+
+    db.init_app(app)
 
     @app.route("/")
     def index():
