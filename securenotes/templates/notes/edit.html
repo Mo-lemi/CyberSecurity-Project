@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Edit note · SecureNotes{% endblock %}
+
+{% block content %}
+  <h1>Edit note</h1>
+
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="title">Title</label>
+    <input id="title" name="title" required maxlength="100"
+           value="{{ request.form.get('title', note['title']) }}">
+
+    <label for="body">Note</label>
+    <textarea id="body" name="body" rows="10" maxlength="10000">{{ request.form.get('body', note['body']) }}</textarea>
+
+    <button type="submit">Save changes</button>
+  </form>
+
+  <p><a href="{{ url_for('notes.view', note_id=note['id']) }}">Cancel</a></p>
+{% endblock %}

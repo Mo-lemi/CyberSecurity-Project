@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}{{ note["title"] }} · SecureNotes{% endblock %}
+
+{% block content %}
+  <h1>{{ note["title"] }}</h1>
+  <p><small>Last updated {{ note["updated_at"] }} UTC</small></p>
+
+  <div class="note-body">{{ note["body"] }}</div>
+
+  <p class="actions">
+    <a href="{{ url_for('notes.edit', note_id=note['id']) }}">Edit</a>
+    <a href="{{ url_for('notes.index') }}">Back to my notes</a>
+  </p>
+
+  <form method="post" action="{{ url_for('notes.delete', note_id=note['id']) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="danger">Delete note</button>
+  </form>
+{% endblock %}

@@ -11,7 +11,7 @@ A small note-taking web app built **security-first**: users register, log in, wr
 ## Features (planned)
 
 - [x] User registration and login
-- [ ] Create, view, edit and delete private notes
+- [x] Create, view, edit and delete private notes
 - [ ] Share a note with another user (read-only)
 - [ ] Rate-limited login to slow down password guessing
 - [ ] Runs in Docker
@@ -64,6 +64,9 @@ Decisions are recorded as they are made, with the reasoning behind them.
 23. **A note's owner always comes from the session, never from the form.** When a note is created, `owner_id` is taken from the logged-in user (`g.user`). Even if an attacker adds an `owner_id` field to the request with Burp Suite, it is ignored, so nobody can create notes "as" someone else.
 24. **`login_required` as a decorator.** Pages that need a login are marked with `@login_required`, which redirects logged-out visitors to the login page. One shared check is harder to forget or get wrong than repeating an `if` in every page.
 25. **Two layers of size limits.** Notes are capped at 100 characters for the title and 10,000 for the body, with a friendly error message. Separately, Flask rejects any request over 256 KB before the app even reads it, which protects every page, not just notes (threat D2).
+26. **The owner check is built into the database query.** Every page that opens a note goes through one helper, `get_owned_note()`, which runs `... WHERE id = ? AND owner_id = ?`. A note simply can't be loaded without the ownership check, so there is no separate `if` that a future change could forget. `UPDATE` and `DELETE` repeat `AND owner_id = ?` as a second layer (defence in depth).
+27. **"Not yours" looks exactly like "doesn't exist".** Both return the same 404 page. A 403 Forbidden would confirm that note 42 *exists*, which tells an attacker (or a stalker, threat A3) that there is something worth targeting.
+28. **Note IDs are plain numbers on purpose.** Random IDs would make guessing harder, but that is security through obscurity. The access check is the real defence, and sequential IDs make it easy to *prove* it works: changing `/notes/1` to `/notes/2` in Burp Suite should always fail.
 
 ## Roadmap
 

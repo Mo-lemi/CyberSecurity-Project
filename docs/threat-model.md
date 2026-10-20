@@ -102,7 +102,7 @@ A trust boundary is where data crosses from something we don't control into some
 
 | ID | Threat | Attacker | Defence | Status |
 |---|---|---|---|---|
-| T1 | User edits or deletes a note they don't own | A2, A5 | **Owner check** on every edit and delete; shared users are read-only | ⬜ |
+| T1 | User edits or deletes a note they don't own | A2, A5 | **Owner check** on every edit and delete; shared users are read-only | ✅ (owner check; sharing later) |
 | T2 | Malicious site submits forms as the logged-in user (CSRF) | A6 | **CSRF token** on every form (Flask-WTF `CSRFProtect`, applied app-wide); `SameSite=Lax` cookies; logout is POST-only | ✅ |
 | T3 | Input changes the meaning of a SQL query (SQL injection) | A7 | **Parameterised queries only**, never string concatenation | ✅ (registration) |
 | T4 | Vulnerable or compromised package changes app behaviour | A8 | **Pinned versions**; **pip-audit** in CI checks for known vulnerabilities | ⬜ |
@@ -117,8 +117,8 @@ A trust boundary is where data crosses from something we don't control into some
 
 | ID | Threat | Attacker | Defence | Status |
 |---|---|---|---|---|
-| I1 | User reads a note by changing its ID in the URL (**IDOR**) | A2, A3 | Every note lookup checks *"is this user the owner, or has the note been shared with them?"* | ⬜ |
-| I2 | App reveals that a note exists even when access is denied | A2, A3 | Return **404 Not Found** (not 403 Forbidden) for notes the user can't access, so attackers can't tell "exists but forbidden" from "doesn't exist" | ⬜ |
+| I1 | User reads a note by changing its ID in the URL (**IDOR**) | A2, A3 | Every note lookup checks *"is this user the owner, or has the note been shared with them?"* | ✅ (owner; sharing later) |
+| I2 | App reveals that a note exists even when access is denied | A2, A3 | Return **404 Not Found** (not 403 Forbidden) for notes the user can't access, so attackers can't tell "exists but forbidden" from "doesn't exist" | ✅ |
 | I3 | Script hidden in a shared note runs in the victim's browser (**XSS**) | A5 | Jinja2 **auto-escaping**; **Content-Security-Policy** header as a second layer | ✅ (escaping; CSP later) |
 | I4 | Passwords leak if the database is stolen | A7 | Store **argon2id hashes** only, never the passwords themselves | ✅ |
 | I5 | Error pages reveal code, paths or settings | All | Debug mode off outside local development; generic error pages | ⬜ |

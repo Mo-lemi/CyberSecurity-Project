@@ -10,7 +10,7 @@
     <ul class="notes">
       {% for note in notes %}
         <li>
-          <strong>{{ note["title"] }}</strong>
+          <a href="{{ url_for('notes.view', note_id=note['id']) }}"><strong>{{ note["title"] }}</strong></a>
           <small>updated {{ note["updated_at"] }} UTC</small>
         </li>
       {% endfor %}
