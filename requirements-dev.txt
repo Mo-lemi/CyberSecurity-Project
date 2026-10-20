@@ -1,0 +1,3 @@
+# Tools for development and testing only; not needed to run the app.
+-r requirements.txt
+pytest==9.1.1
