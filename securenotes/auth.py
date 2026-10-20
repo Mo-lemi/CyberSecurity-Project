@@ -1,3 +1,4 @@
+import functools
 import re
 import sqlite3
 
@@ -131,3 +132,15 @@ def load_logged_in_user():
         g.user = get_db().execute(
             "SELECT id, username FROM users WHERE id = ?", (user_id,)
         ).fetchone()
+
+
+def login_required(view):
+    """Decorator: send logged-out visitors to the login page (threat E2)."""
+
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if g.user is None:
+            return redirect(url_for("auth.login"))
+        return view(**kwargs)
+
+    return wrapped_view

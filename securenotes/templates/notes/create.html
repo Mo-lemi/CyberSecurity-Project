@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}New note · SecureNotes{% endblock %}
+
+{% block content %}
+  <h1>New note</h1>
+
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="title">Title</label>
+    <input id="title" name="title" required maxlength="100"
+           value="{{ request.form.get('title', '') }}">
+
+    <label for="body">Note</label>
+    <textarea id="body" name="body" rows="10" maxlength="10000">{{ request.form.get('body', '') }}</textarea>
+
+    <button type="submit">Save</button>
+  </form>
+{% endblock %}

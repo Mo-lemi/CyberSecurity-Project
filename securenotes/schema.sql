@@ -1,6 +1,8 @@
 -- SecureNotes database schema.
 -- WARNING: running `flask init-db` executes this file and DELETES all existing data.
 
+-- Drop in reverse order: notes depend on users.
+DROP TABLE IF EXISTS notes;
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
@@ -11,4 +13,15 @@ CREATE TABLE users (
     -- Only the argon2 hash is stored, never the password itself (threat I4).
     password_hash TEXT    NOT NULL,
     created_at    TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notes (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- Every note belongs to exactly one user. ON DELETE CASCADE: if a user
+    -- is ever deleted, their notes go with them instead of being left orphaned.
+    owner_id   INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    title      TEXT    NOT NULL,
+    body       TEXT    NOT NULL,
+    created_at TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

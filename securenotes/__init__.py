@@ -11,6 +11,10 @@ def create_app(test_config=None):
     # Defaults; tests can override any of these through test_config.
     app.config["DATABASE"] = os.path.join(app.instance_path, "securenotes.sqlite")
 
+    # Reject any request body over 256 KB with "413 Request Entity Too Large" (threat D2).
+    # Plenty for a 10,000-character note, even with emoji and form encoding.
+    app.config["MAX_CONTENT_LENGTH"] = 256 * 1024
+
     # Session cookie hardening (threat S2):
     # HttpOnly - JavaScript can't read the cookie, so an XSS bug can't steal it.
     # SameSite=Lax - the browser won't attach it to forms submitted from other sites.
@@ -45,9 +49,10 @@ def create_app(test_config=None):
     # with "400 Bad Request" (threat T2). Applied app-wide so no form can be forgotten.
     CSRFProtect(app)
 
-    from . import auth
+    from . import auth, notes
 
     app.register_blueprint(auth.bp)
+    app.register_blueprint(notes.bp)
 
     @app.route("/")
     def index():

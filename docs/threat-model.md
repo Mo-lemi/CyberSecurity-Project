@@ -119,7 +119,7 @@ A trust boundary is where data crosses from something we don't control into some
 |---|---|---|---|---|
 | I1 | User reads a note by changing its ID in the URL (**IDOR**) | A2, A3 | Every note lookup checks *"is this user the owner, or has the note been shared with them?"* | ⬜ |
 | I2 | App reveals that a note exists even when access is denied | A2, A3 | Return **404 Not Found** (not 403 Forbidden) for notes the user can't access, so attackers can't tell "exists but forbidden" from "doesn't exist" | ⬜ |
-| I3 | Script hidden in a shared note runs in the victim's browser (**XSS**) | A5 | Jinja2 **auto-escaping**; **Content-Security-Policy** header as a second layer | ⬜ |
+| I3 | Script hidden in a shared note runs in the victim's browser (**XSS**) | A5 | Jinja2 **auto-escaping**; **Content-Security-Policy** header as a second layer | ✅ (escaping; CSP later) |
 | I4 | Passwords leak if the database is stolen | A7 | Store **argon2id hashes** only, never the passwords themselves | ✅ |
 | I5 | Error pages reveal code, paths or settings | All | Debug mode off outside local development; generic error pages | ⬜ |
 | I6 | `SECRET_KEY` or the database is committed to the public repo | All | `.gitignore` excludes `.env`, `instance/` and database files | ✅ |
@@ -130,14 +130,14 @@ A trust boundary is where data crosses from something we don't control into some
 | ID | Threat | Attacker | Defence | Status |
 |---|---|---|---|---|
 | D1 | Flood of login attempts | A4, A10 | **Rate limiting** on login (shared with S1) | ⬜ |
-| D2 | Huge notes or form submissions fill memory or disk | A10 | Maximum note length; Flask `MAX_CONTENT_LENGTH` request size limit | ⬜ |
+| D2 | Huge notes or form submissions fill memory or disk | A10 | Maximum note length (title 100, body 10,000 characters); Flask `MAX_CONTENT_LENGTH` rejects requests over 256 KB | ✅ |
 
 ### E: Elevation of privilege (gaining more access than allowed)
 
 | ID | Threat | Attacker | Defence | Status |
 |---|---|---|---|---|
 | E1 | User with read-only access to a shared note edits it or re-shares it | A5 | Edit, delete and share actions check for **owner**, not just "can read" | ⬜ |
-| E2 | Logged-out user reaches pages that need a login | All | A `login_required` check on every page except register, login and home | ⬜ |
+| E2 | Logged-out user reaches pages that need a login | All | A `login_required` check on every page except register, login and home | ✅ |
 
 ---
 

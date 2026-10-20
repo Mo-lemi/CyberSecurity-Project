@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}My notes · SecureNotes{% endblock %}
+
+{% block content %}
+  <h1>My notes</h1>
+  <p><a href="{{ url_for('notes.create') }}">+ New note</a></p>
+
+  {% if notes %}
+    <ul class="notes">
+      {% for note in notes %}
+        <li>
+          <strong>{{ note["title"] }}</strong>
+          <small>updated {{ note["updated_at"] }} UTC</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>You don't have any notes yet.</p>
+  {% endif %}
+{% endblock %}

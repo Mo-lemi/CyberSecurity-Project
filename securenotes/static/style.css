@@ -48,8 +48,29 @@ label {
   font-weight: 600;
 }
 
-input {
+nav span {
+  margin-left: 1rem;
+}
+
+.notes {
+  list-style: none;
+  padding: 0;
+}
+
+.notes li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #d0d7de;
+}
+
+.notes small {
+  display: block;
+  color: #59636e;
+}
+
+input,
+textarea {
   width: 100%;
+  font: inherit;
   padding: 0.4rem;
   box-sizing: border-box;
 }

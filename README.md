@@ -61,6 +61,9 @@ Decisions are recorded as they are made, with the reasoning behind them.
 20. **Hardened session cookie.** `HttpOnly` (JavaScript can't read it, so XSS can't steal it), `SameSite=Lax` (not sent with forms from other sites) and `Secure` (HTTPS only). `Secure` is **on by default** and can only be turned off explicitly in `.env` for local development. If the setting is forgotten, the app fails safe: logins stop working over plain http rather than cookies leaking.
 21. **The session is cleared on login and logout.** Nothing stored in the session before login carries over afterwards (session fixation, threat S4).
 22. **Logout is a POST request.** If logout were a plain link (GET), any website could log users out by embedding `<img src=".../auth/logout">`. As a POST, it requires a CSRF token.
+23. **A note's owner always comes from the session, never from the form.** When a note is created, `owner_id` is taken from the logged-in user (`g.user`). Even if an attacker adds an `owner_id` field to the request with Burp Suite, it is ignored, so nobody can create notes "as" someone else.
+24. **`login_required` as a decorator.** Pages that need a login are marked with `@login_required`, which redirects logged-out visitors to the login page. One shared check is harder to forget or get wrong than repeating an `if` in every page.
+25. **Two layers of size limits.** Notes are capped at 100 characters for the title and 10,000 for the body, with a friendly error message. Separately, Flask rejects any request over 256 KB before the app even reads it, which protects every page, not just notes (threat D2).
 
 ## Roadmap
 
@@ -88,10 +91,10 @@ python -c "import secrets; print(secrets.token_hex(32))"
 # and keep SESSION_COOKIE_SECURE=false (local http only)
 
 # 4. Create the database (WARNING: re-running this deletes all data)
-flask --app securenotes init-db
+python -m flask --app securenotes init-db
 
 # 5. Run the development server
-flask --app securenotes run --debug
+python -m flask --app securenotes run --debug
 ```
 
 Then open http://127.0.0.1:5000.

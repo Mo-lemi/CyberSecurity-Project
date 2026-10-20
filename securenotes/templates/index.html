@@ -3,4 +3,9 @@
 {% block content %}
   <h1>Welcome{% if g.user %}, {{ g.user["username"] }}{% endif %}</h1>
   <p>Private notes, built security-first.</p>
+  {% if g.user %}
+    <p><a href="{{ url_for('notes.index') }}">Go to my notes →</a></p>
+  {% else %}
+    <p><a href="{{ url_for('auth.login') }}">Log in</a> or <a href="{{ url_for('auth.register') }}">create an account</a> to start.</p>
+  {% endif %}
 {% endblock %}

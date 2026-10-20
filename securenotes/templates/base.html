@@ -12,6 +12,7 @@
     <a class="brand" href="{{ url_for('index') }}">🔒 SecureNotes</a>
     <nav>
       {% if g.user %}
+        <a href="{{ url_for('notes.index') }}">My notes</a>
         <span>Signed in as <strong>{{ g.user["username"] }}</strong></span>
         <form class="inline" method="post" action="{{ url_for('auth.logout') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
