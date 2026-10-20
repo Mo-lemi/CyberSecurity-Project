@@ -67,6 +67,8 @@ Decisions are recorded as they are made, with the reasoning behind them.
 26. **The owner check is built into the database query.** Every page that opens a note goes through one helper, `get_owned_note()`, which runs `... WHERE id = ? AND owner_id = ?`. A note simply can't be loaded without the ownership check, so there is no separate `if` that a future change could forget. `UPDATE` and `DELETE` repeat `AND owner_id = ?` as a second layer (defence in depth).
 27. **"Not yours" looks exactly like "doesn't exist".** Both return the same 404 page. A 403 Forbidden would confirm that note 42 *exists*, which tells an attacker (or a stalker, threat A3) that there is something worth targeting.
 28. **Note IDs are plain numbers on purpose.** Random IDs would make guessing harder, but that is security through obscurity. The access check is the real defence, and sequential IDs make it easy to *prove* it works: changing `/notes/1` to `/notes/2` in Burp Suite should always fail.
+29. **Separate `requirements-dev.txt` for test tools.** pytest is needed to *develop* the app, not to *run* it. Keeping it out of `requirements.txt` means the production install (and later the Docker image) contains less code, and so less that could be vulnerable.
+30. **Tests are written against the threat model.** Each security test names the threat it covers (e.g. *"Threat I2: a 403 would confirm the note exists"*), so the threat model's 🔍 *verified* status points to real evidence. To check the tests themselves, the owner check was deliberately removed once: 5 access-control tests failed, proving they catch an IDOR bug.
 
 ## Roadmap
 
@@ -103,6 +105,15 @@ python -m flask --app securenotes run --debug
 Then open http://127.0.0.1:5000.
 
 > ⚠️ `--debug` is for local development only. Never run with it on a server (see design decision 10).
+
+## Running the tests
+
+```powershell
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+Every test gets a fresh, empty database in a temporary folder, so tests never touch your real data. The access-control (IDOR) tests are in [`tests/test_notes.py`](tests/test_notes.py).
 
 ## Author
 
