@@ -1,0 +1,34 @@
+# Runs automatically on every push and pull request.
+# If any step fails, GitHub marks the commit with a red ❌.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Least privilege: this workflow only needs to read the code, not change the repo.
+# If a compromised tool ran in CI, it couldn't push code or edit releases.
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      # Third-party actions are pinned to an exact commit, not a tag like "v7",
+      # because a tag can be moved to point at different (possibly malicious) code.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: python -m pytest -v

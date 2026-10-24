@@ -1,5 +1,7 @@
 # SecureNotes
 
+[![CI](https://github.com/Mo-lemi/CyberSecurity-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/Mo-lemi/CyberSecurity-Project/actions/workflows/ci.yml)
+
 A small note-taking web app built **security-first**: users register, log in, write private notes, and share individual notes with other users. The features are kept deliberately small so the focus stays on threat modelling, secure coding, automated security checks and testing the app's own defences.
 
 > **Status:** 🚧 In development. This README is updated as the project grows.
@@ -69,6 +71,8 @@ Decisions are recorded as they are made, with the reasoning behind them.
 28. **Note IDs are plain numbers on purpose.** Random IDs would make guessing harder, but that is security through obscurity. The access check is the real defence, and sequential IDs make it easy to *prove* it works: changing `/notes/1` to `/notes/2` in Burp Suite should always fail.
 29. **Separate `requirements-dev.txt` for test tools.** pytest is needed to *develop* the app, not to *run* it. Keeping it out of `requirements.txt` means the production install (and later the Docker image) contains less code, and so less that could be vulnerable.
 30. **Tests are written against the threat model.** Each security test names the threat it covers (e.g. *"Threat I2: a 403 would confirm the note exists"*), so the threat model's 🔍 *verified* status points to real evidence. To check the tests themselves, the owner check was deliberately removed once: 5 access-control tests failed, proving they catch an IDOR bug.
+31. **The CI pipeline has read-only permissions.** The GitHub Actions workflow is given `contents: read` and nothing else (least privilege). If a tool running in CI were ever compromised, it couldn't push code or change the repository.
+32. **CI actions are pinned to exact commits.** Third-party actions are referenced by commit hash (e.g. `actions/checkout@3d3c42e...`) rather than a tag like `v7`. A tag can be moved to point at different code, as happened in the 2025 `tj-actions/changed-files` supply-chain attack, but a commit hash can't (threat T4).
 
 ## Roadmap
 
@@ -114,6 +118,8 @@ python -m pytest
 ```
 
 Every test gets a fresh, empty database in a temporary folder, so tests never touch your real data. The access-control (IDOR) tests are in [`tests/test_notes.py`](tests/test_notes.py).
+
+The same tests run automatically on GitHub Actions for every push (see the CI badge at the top).
 
 ## Author
 
