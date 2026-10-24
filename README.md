@@ -25,7 +25,7 @@ A small note-taking web app built **security-first**: users register, log in, wr
 | **Threat modelling (STRIDE)** | Identify threats to the app *before* writing code, and decide how each one is handled. See [docs/threat-model.md](docs/threat-model.md) | v1 done |
 | **OWASP Top 10** | Map each relevant OWASP risk to the defence used in the app | Planned |
 | **Secure coding** | Password hashing, CSRF protection, output escaping, parameterised SQL, access checks on every note | Planned |
-| **DevSecOps** | GitHub Actions runs tests, a code security scanner (Bandit) and a dependency vulnerability check (pip-audit) on every push | Planned |
+| **DevSecOps** | GitHub Actions runs tests, a code security scanner (Bandit) and a dependency vulnerability check (pip-audit) on every push. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Done |
 | **Self-pentest** | Attack the finished app with Burp Suite and ffuf, then write up and fix the findings | Planned |
 
 ## Tech stack
@@ -73,6 +73,7 @@ Decisions are recorded as they are made, with the reasoning behind them.
 30. **Tests are written against the threat model.** Each security test names the threat it covers (e.g. *"Threat I2: a 403 would confirm the note exists"*), so the threat model's 🔍 *verified* status points to real evidence. To check the tests themselves, the owner check was deliberately removed once: 5 access-control tests failed, proving they catch an IDOR bug.
 31. **The CI pipeline has read-only permissions.** The GitHub Actions workflow is given `contents: read` and nothing else (least privilege). If a tool running in CI were ever compromised, it couldn't push code or change the repository.
 32. **CI actions are pinned to exact commits.** Third-party actions are referenced by commit hash (e.g. `actions/checkout@3d3c42e...`) rather than a tag like `v7`. A tag can be moved to point at different code, as happened in the 2025 `tj-actions/changed-files` supply-chain attack, but a commit hash can't (threat T4).
+33. **Security scans block the build.** Bandit (static analysis of our own code) and pip-audit (known vulnerabilities in dependencies) run in their own CI job. Any finding fails the build with a red ❌, instead of producing a report nobody reads. Bandit scans only `securenotes/`, not `tests/`, because tests use `assert` on purpose and Bandit would flag every one.
 
 ## Roadmap
 
