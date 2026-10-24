@@ -41,9 +41,10 @@ def create_app(test_config=None):
     # The instance folder holds local-only files like the database (git-ignored).
     os.makedirs(app.instance_path, exist_ok=True)
 
-    from . import db
+    from . import db, headers
 
     db.init_app(app)
+    headers.init_app(app)
 
     # Every POST request must carry a valid CSRF token, or it is rejected
     # with "400 Bad Request" (threat T2). Applied app-wide so no form can be forgotten.

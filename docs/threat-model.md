@@ -1,6 +1,6 @@
 # SecureNotes Threat Model (STRIDE)
 
-**Version:** 1.1 (19 October 2026). v1.0 was written before any feature code
+**Version:** 1.2 (24 October 2026). v1.0 was written before any feature code
 **Method:** [STRIDE](https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats): Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege
 
 This document answers four questions:
@@ -119,11 +119,12 @@ A trust boundary is where data crosses from something we don't control into some
 |---|---|---|---|---|
 | I1 | User reads a note by changing its ID in the URL (**IDOR**) | A2, A3 | Every note lookup checks *"is this user the owner, or has the note been shared with them?"* | 🔍 (owner; sharing later) |
 | I2 | App reveals that a note exists even when access is denied | A2, A3 | Return **404 Not Found** (not 403 Forbidden) for notes the user can't access, so attackers can't tell "exists but forbidden" from "doesn't exist" | 🔍 |
-| I3 | Script hidden in a shared note runs in the victim's browser (**XSS**) | A5 | Jinja2 **auto-escaping**; **Content-Security-Policy** header as a second layer | 🔍 (escaping; CSP later) |
+| I3 | Script hidden in a shared note runs in the victim's browser (**XSS**) | A5 | Jinja2 **auto-escaping**; **Content-Security-Policy** header as a second layer: no scripts may run at all | 🔍 |
 | I4 | Passwords leak if the database is stolen | A7 | Store **argon2id hashes** only, never the passwords themselves | 🔍 |
 | I5 | Error pages reveal code, paths or settings | All | Debug mode off outside local development; generic error pages | 🔍 (debug off; error pages later) |
 | I6 | `SECRET_KEY` or the database is committed to the public repo | All | `.gitignore` excludes `.env`, `instance/` and database files | ✅ |
-| I7 | App is loaded in a hidden frame on another site to trick clicks (clickjacking) | A6 | `X-Frame-Options: DENY` / CSP `frame-ancestors 'none'` | ⬜ |
+| I7 | App is loaded in a hidden frame on another site to trick clicks (clickjacking) | A6 | `X-Frame-Options: DENY` / CSP `frame-ancestors 'none'` | 🔍 |
+| I8 | On a shared computer, the next person presses Back after logout and sees the previous user's notes from the browser cache | A3 | `Cache-Control: no-store` on every page except static files | 🔍 |
 
 ### D: Denial of service (making the app unusable)
 
@@ -168,3 +169,4 @@ As defences are built and tested, the status columns above will be updated. Test
 |---|---|---|
 | 1.0 | 18 Oct 2026 | First version, written before feature code |
 | 1.1 | 19 Oct 2026 | Switched accounts from email to username (data minimisation); updated A4 and S5 |
+| 1.2 | 24 Oct 2026 | Added I8 (browser caching of private pages), found while adding security headers |

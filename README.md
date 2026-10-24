@@ -24,7 +24,7 @@ A small note-taking web app built **security-first**: users register, log in, wr
 |---|---|---|
 | **Threat modelling (STRIDE)** | Identify threats to the app *before* writing code, and decide how each one is handled. See [docs/threat-model.md](docs/threat-model.md) | v1 done |
 | **OWASP Top 10** | Map each relevant OWASP risk to the defence used in the app | Planned |
-| **Secure coding** | Password hashing, CSRF protection, output escaping, parameterised SQL, access checks on every note | Planned |
+| **Secure coding** | Password hashing, CSRF protection, output escaping, parameterised SQL, access checks on every note, security headers | Done; sharing and rate limiting next |
 | **DevSecOps** | GitHub Actions runs tests, a code security scanner (Bandit) and a dependency vulnerability check (pip-audit) on every push. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Done |
 | **Self-pentest** | Attack the finished app with Burp Suite and ffuf, then write up and fix the findings | Planned |
 
@@ -74,6 +74,9 @@ Decisions are recorded as they are made, with the reasoning behind them.
 31. **The CI pipeline has read-only permissions.** The GitHub Actions workflow is given `contents: read` and nothing else (least privilege). If a tool running in CI were ever compromised, it couldn't push code or change the repository.
 32. **CI actions are pinned to exact commits.** Third-party actions are referenced by commit hash (e.g. `actions/checkout@3d3c42e...`) rather than a tag like `v7`. A tag can be moved to point at different code, as happened in the 2025 `tj-actions/changed-files` supply-chain attack, but a commit hash can't (threat T4).
 33. **Security scans block the build.** Bandit (static analysis of our own code) and pip-audit (known vulnerabilities in dependencies) run in their own CI job. Any finding fails the build with a red ❌, instead of producing a report nobody reads. Bandit scans only `securenotes/`, not `tests/`, because tests use `assert` on purpose and Bandit would flag every one.
+34. **A Content-Security-Policy that allows no scripts at all.** SecureNotes has no JavaScript, so the policy (`default-src 'none'`) blocks scripts completely instead of listing allowed ones. If an XSS bug ever slipped past Jinja2's escaping, the browser would still refuse to run the injected script. That's two independent layers for threat I3. `frame-ancestors 'none'` and `X-Frame-Options: DENY` stop other sites loading SecureNotes in a hidden frame (clickjacking, I7).
+35. **Private pages are never cached.** `Cache-Control: no-store` stops the browser keeping copies of pages, so on a shared computer the next person can't press Back after logout and read someone's notes (threat I8, found while adding these headers). The stylesheet is excluded because it contains nothing private.
+36. **No HSTS header yet.** `Strict-Transport-Security` forces browsers to always use HTTPS, but it only makes sense once the app is deployed with HTTPS. Sent from `http://127.0.0.1` it would be ignored, and on a misconfigured server it could lock users out. It belongs in the deployment configuration.
 
 ## Roadmap
 
