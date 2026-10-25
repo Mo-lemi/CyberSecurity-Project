@@ -13,6 +13,35 @@
     <a href="{{ url_for('notes.index') }}">Back to my notes</a>
   </p>
 
+  <section class="sharing">
+    <h2>Sharing</h2>
+    <p><small>People you share with can read this note, but not change, delete or re-share it.</small></p>
+
+    {% if shared_with %}
+      <ul class="shared-with">
+        {% for reader in shared_with %}
+          <li>
+            {{ reader["username"] }}
+            <form class="inline" method="post"
+                  action="{{ url_for('notes.revoke', note_id=note['id'], user_id=reader['id']) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit">Remove access</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Only you can see this note.</p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('notes.share', note_id=note['id']) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="share-username">Share with (username)</label>
+      <input id="share-username" name="username" required maxlength="30" autocomplete="off">
+      <button type="submit">Share</button>
+    </form>
+  </section>
+
   <form method="post" action="{{ url_for('notes.delete', note_id=note['id']) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit" class="danger">Delete note</button>

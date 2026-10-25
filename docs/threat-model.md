@@ -137,7 +137,7 @@ A trust boundary is where data crosses from something we don't control into some
 
 | ID | Threat | Attacker | Defence | Status |
 |---|---|---|---|---|
-| E1 | User with read-only access to a shared note edits it or re-shares it | A5 | Edit, delete and share actions check for **owner**, not just "can read" | ⬜ |
+| E1 | User with read-only access to a shared note edits it or re-shares it | A5 | Edit, delete, share and revoke all go through `get_owned_note()`, which checks for **owner**, not just "can read" | 🔍 |
 | E2 | Logged-out user reaches pages that need a login | All | A `login_required` check on every page except register, login and home | 🔍 |
 
 ---

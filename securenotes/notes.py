@@ -1,3 +1,5 @@
+import sqlite3
+
 from flask import (
     Blueprint,
     abort,
@@ -86,7 +88,15 @@ def create():
 @bp.route("/<int:note_id>")
 @login_required
 def view(note_id):
-    return render_template("notes/view.html", note=get_owned_note(note_id))
+    note = get_owned_note(note_id)
+    # Only the owner reaches this point, so only the owner sees who has access.
+    shared_with = get_db().execute(
+        "SELECT users.id, users.username FROM shares"
+        " JOIN users ON users.id = shares.user_id"
+        " WHERE shares.note_id = ? ORDER BY users.username",
+        (note_id,),
+    ).fetchall()
+    return render_template("notes/view.html", note=note, shared_with=shared_with)
 
 
 @bp.route("/<int:note_id>/edit", methods=("GET", "POST"))
@@ -128,3 +138,46 @@ def delete(note_id):
     get_db().commit()
     flash("Note deleted.")
     return redirect(url_for("notes.index"))
+
+
+@bp.route("/<int:note_id>/share", methods=("POST",))
+@login_required
+def share(note_id):
+    # get_owned_note: only the owner may share (threat E1).
+    get_owned_note(note_id)
+    username = request.form.get("username", "").strip()
+
+    reader = get_db().execute(
+        "SELECT id FROM users WHERE username = ?", (username,)
+    ).fetchone()
+
+    if reader is None:
+        # Reveals whether a username exists: an accepted risk, see threat S5.
+        flash("No user with that name.")
+    elif reader["id"] == g.user["id"]:
+        flash("You already own this note.")
+    else:
+        try:
+            get_db().execute(
+                "INSERT INTO shares (note_id, user_id) VALUES (?, ?)",
+                (note_id, reader["id"]),
+            )
+            get_db().commit()
+            flash(f"Shared with {username}.")
+        except sqlite3.IntegrityError:
+            # The (note_id, user_id) primary key rejected a duplicate share.
+            flash(f"Already shared with {username}.")
+
+    return redirect(url_for("notes.view", note_id=note_id))
+
+
+@bp.route("/<int:note_id>/shares/<int:user_id>/revoke", methods=("POST",))
+@login_required
+def revoke(note_id, user_id):
+    get_owned_note(note_id)  # only the owner may revoke access
+    get_db().execute(
+        "DELETE FROM shares WHERE note_id = ? AND user_id = ?", (note_id, user_id)
+    )
+    get_db().commit()
+    flash("Access removed.")
+    return redirect(url_for("notes.view", note_id=note_id))

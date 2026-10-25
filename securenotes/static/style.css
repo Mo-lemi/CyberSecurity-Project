@@ -77,6 +77,16 @@ nav span {
   background: #f6f8fa;
 }
 
+.sharing {
+  margin: 1.5rem 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid #d0d7de;
+}
+
+.shared-with {
+  padding-left: 1.25rem;
+}
+
 .actions a {
   margin-right: 1rem;
 }

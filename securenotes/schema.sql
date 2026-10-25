@@ -1,7 +1,8 @@
 -- SecureNotes database schema.
 -- WARNING: running `flask init-db` executes this file and DELETES all existing data.
 
--- Drop in reverse order: notes depend on users.
+-- Drop in reverse order: shares depend on notes, notes depend on users.
+DROP TABLE IF EXISTS shares;
 DROP TABLE IF EXISTS notes;
 DROP TABLE IF EXISTS users;
 
@@ -24,4 +25,14 @@ CREATE TABLE notes (
     body       TEXT    NOT NULL,
     created_at TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- One row per "note X is shared read-only with user Y".
+CREATE TABLE shares (
+    -- If the note or the user is deleted, the share disappears with it.
+    note_id    INTEGER NOT NULL REFERENCES notes (id) ON DELETE CASCADE,
+    user_id    INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    created_at TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- A note can be shared with the same user only once.
+    PRIMARY KEY (note_id, user_id)
 );
