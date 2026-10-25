@@ -14,7 +14,7 @@ A small note-taking web app built **security-first**: users register, log in, wr
 
 - [x] User registration and login
 - [x] Create, view, edit and delete private notes
-- [ ] Share a note with another user (read-only)
+- [x] Share a note with another user (read-only)
 - [ ] Rate-limited login to slow down password guessing
 - [ ] Runs in Docker
 
@@ -80,6 +80,7 @@ Decisions are recorded as they are made, with the reasoning behind them.
 37. **Sharing is owner-only, using the same gatekeeper.** Share and revoke both start with `get_owned_note()`, the same check used by edit and delete. Anyone who isn't the owner, including people the note is shared with, gets a 404 (threat E1). Shares live in their own table, whose primary key `(note_id, user_id)` makes duplicate shares impossible, and they are deleted automatically when the note is.
 38. **Sharing with an unknown username says so.** "No user with that name" reveals that a username doesn't exist. Registration already reveals the same thing, so hiding it here would protect nothing and would make typos look like successful shares. Same accepted risk as decision 18 (threat S5).
 39. **Only the owner sees who has access.** Alice sees the list of people she shared with and can remove each one. People she shares with don't see each other, so sharing with Bob never reveals Carol's username to him.
+40. **Two gatekeepers: one for reading, one for changing.** `get_readable_note()` lets in the owner *or* someone the note is shared with, and it is used **only** to view a note. Everything that changes a note (edit, delete, share, revoke) uses the stricter `get_owned_note()`. Hiding the Edit and Delete buttons from readers is just for a clean page; the server-side check is what actually stops a reader who sends those requests by hand. To test the tests, `edit` was deliberately switched to the looser check, and 2 tests failed immediately.
 
 ## Roadmap
 

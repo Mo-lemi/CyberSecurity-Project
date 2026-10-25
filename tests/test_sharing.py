@@ -100,3 +100,60 @@ def test_reader_cannot_reshare_or_revoke(app, alice, bob, carol):
 def test_share_and_revoke_must_be_post(alice):
     assert alice.get("/notes/1/share").status_code == 405
     assert alice.get("/notes/1/shares/2/revoke").status_code == 405
+
+
+# --- What a reader can and can't do -------------------------------------------
+
+
+def test_reader_can_view_shared_note_read_only(alice, bob):
+    share(alice, "bob")
+    page = bob.get("/notes/1")
+    assert page.status_code == 200
+    assert b"12 Main St" in page.data
+    assert b"Shared by <strong>alice</strong>" in page.data
+    # No owner controls on the reader's page.
+    assert b"Delete note" not in page.data
+    assert b"/notes/1/edit" not in page.data
+
+
+def test_shared_note_appears_in_shared_with_me(alice, bob):
+    share(alice, "bob")
+    page = bob.get("/notes/").data
+    assert b"Birthday party" in page
+    assert b"from alice" in page
+
+
+@pytest.mark.parametrize(
+    ("method", "url", "data"),
+    [
+        ("get", "/notes/1/edit", None),
+        ("post", "/notes/1/edit", {"title": "HACKED", "body": "x"}),
+        ("post", "/notes/1/delete", None),
+    ],
+)
+def test_reader_cannot_edit_or_delete(app, alice, bob, method, url, data):
+    """Threat E1: read access must never become write access, even via Burp."""
+    share(alice, "bob")
+    assert getattr(bob, method)(url, data=data).status_code == 404
+    with app.app_context():
+        title = get_db().execute("SELECT title FROM notes WHERE id = 1").fetchone()[0]
+    assert title == "Birthday party"
+
+
+def test_readers_do_not_see_each_other(alice, bob, carol):
+    """Design decision 39: sharing with Bob never reveals Carol to him."""
+    share(alice, "bob")
+    share(alice, "carol")
+    assert b"carol" not in bob.get("/notes/1").data
+
+
+def test_revoked_reader_loses_access_immediately(alice, bob):
+    share(alice, "bob")
+    alice.post("/notes/1/shares/2/revoke")
+    assert bob.get("/notes/1").status_code == 404
+    assert b"Birthday party" not in bob.get("/notes/").data
+
+
+def test_sharing_with_bob_does_not_give_carol_access(alice, bob, carol):
+    share(alice, "bob")
+    assert carol.get("/notes/1").status_code == 404

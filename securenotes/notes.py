@@ -49,6 +49,26 @@ def get_owned_note(note_id):
     return note
 
 
+def get_readable_note(note_id):
+    """Return the note if the user owns it OR it was shared with them; otherwise 404.
+
+    Used ONLY for viewing. Anything that changes a note uses get_owned_note()
+    instead, so readers can never edit, delete or share (threat E1).
+    """
+    note = get_db().execute(
+        "SELECT notes.id, notes.owner_id, notes.title, notes.body, notes.updated_at,"
+        " users.username AS owner_name"
+        " FROM notes JOIN users ON users.id = notes.owner_id"
+        " WHERE notes.id = ? AND (notes.owner_id = ? OR EXISTS ("
+        "   SELECT 1 FROM shares WHERE shares.note_id = notes.id AND shares.user_id = ?"
+        " ))",
+        (note_id, g.user["id"], g.user["id"]),
+    ).fetchone()
+    if note is None:
+        abort(404)
+    return note
+
+
 @bp.route("/")
 @login_required
 def index():
@@ -58,7 +78,16 @@ def index():
         " WHERE owner_id = ? ORDER BY updated_at DESC",
         (g.user["id"],),
     ).fetchall()
-    return render_template("notes/index.html", notes=notes)
+    # Notes other people have shared with the logged-in user.
+    shared_notes = get_db().execute(
+        "SELECT notes.id, notes.title, notes.updated_at, users.username AS owner_name"
+        " FROM shares"
+        " JOIN notes ON notes.id = shares.note_id"
+        " JOIN users ON users.id = notes.owner_id"
+        " WHERE shares.user_id = ? ORDER BY notes.updated_at DESC",
+        (g.user["id"],),
+    ).fetchall()
+    return render_template("notes/index.html", notes=notes, shared_notes=shared_notes)
 
 
 @bp.route("/new", methods=("GET", "POST"))
@@ -88,15 +117,22 @@ def create():
 @bp.route("/<int:note_id>")
 @login_required
 def view(note_id):
-    note = get_owned_note(note_id)
-    # Only the owner reaches this point, so only the owner sees who has access.
-    shared_with = get_db().execute(
-        "SELECT users.id, users.username FROM shares"
-        " JOIN users ON users.id = shares.user_id"
-        " WHERE shares.note_id = ? ORDER BY users.username",
-        (note_id,),
-    ).fetchall()
-    return render_template("notes/view.html", note=note, shared_with=shared_with)
+    note = get_readable_note(note_id)
+    is_owner = note["owner_id"] == g.user["id"]
+
+    # Only the owner sees who has access; readers never see each other.
+    shared_with = []
+    if is_owner:
+        shared_with = get_db().execute(
+            "SELECT users.id, users.username FROM shares"
+            " JOIN users ON users.id = shares.user_id"
+            " WHERE shares.note_id = ? ORDER BY users.username",
+            (note_id,),
+        ).fetchall()
+
+    return render_template(
+        "notes/view.html", note=note, is_owner=is_owner, shared_with=shared_with
+    )
 
 
 @bp.route("/<int:note_id>/edit", methods=("GET", "POST"))

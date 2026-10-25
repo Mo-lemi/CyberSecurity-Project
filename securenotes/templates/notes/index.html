@@ -18,4 +18,18 @@
   {% else %}
     <p>You don't have any notes yet.</p>
   {% endif %}
+
+  <h2>Shared with me</h2>
+  {% if shared_notes %}
+    <ul class="notes">
+      {% for note in shared_notes %}
+        <li>
+          <a href="{{ url_for('notes.view', note_id=note['id']) }}"><strong>{{ note["title"] }}</strong></a>
+          <small>from {{ note["owner_name"] }} · updated {{ note["updated_at"] }} UTC</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Nobody has shared a note with you yet.</p>
+  {% endif %}
 {% endblock %}
