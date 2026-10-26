@@ -92,7 +92,7 @@ A trust boundary is where data crosses from something we don't control into some
 
 | ID | Threat | Attacker | Defence | Status |
 |---|---|---|---|---|
-| S1 | Attacker guesses or reuses a user's password | A1, A3, A4 | Minimum password length; **rate limiting** on login | ⬜ |
+| S1 | Attacker guesses or reuses a user's password | A1, A3, A4 | Minimum password length; **rate limiting** on login: 10 attempts/minute per IP **and** 5/minute per username, so even a botnet can't keep guessing one person's password | 🔍 |
 | S2 | Attacker steals a session cookie | A1, A5 | Cookie flags `HttpOnly` (JavaScript can't read it), `SameSite=Lax`, and `Secure` in production (sent over HTTPS only) | 🔍 |
 | S3 | Attacker forges a session cookie | A1 | Cookies are signed with a strong random `SECRET_KEY` kept out of Git; the app refuses to start without one | 🔍 |
 | S4 | Attacker plants a session ID before the victim logs in (session fixation) | A1 | Clear the session completely on login and logout | ✅ |
@@ -130,7 +130,7 @@ A trust boundary is where data crosses from something we don't control into some
 
 | ID | Threat | Attacker | Defence | Status |
 |---|---|---|---|---|
-| D1 | Flood of login attempts | A4, A10 | **Rate limiting** on login (shared with S1) | ⬜ |
+| D1 | Flood of login attempts | A4, A10 | **Rate limiting** on login (shared with S1). A short cooldown, **not** an account lockout, so attackers can't lock real users out on purpose | 🔍 |
 | D2 | Huge notes or form submissions fill memory or disk | A10 | Maximum note length (title 100, body 10,000 characters); Flask `MAX_CONTENT_LENGTH` rejects requests over 256 KB | 🔍 |
 
 ### E: Elevation of privilege (gaining more access than allowed)

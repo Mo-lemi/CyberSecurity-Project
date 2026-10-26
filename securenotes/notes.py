@@ -13,6 +13,7 @@ from flask import (
 
 from .auth import login_required
 from .db import get_db
+from .limiter import PER_IP, limiter
 
 bp = Blueprint("notes", __name__, url_prefix="/notes")
 
@@ -177,6 +178,8 @@ def delete(note_id):
 
 
 @bp.route("/<int:note_id>/share", methods=("POST",))
+# "No user with that name" reveals usernames, so limit it like registration.
+@limiter.limit(PER_IP)
 @login_required
 def share(note_id):
     # get_owned_note: only the owner may share (threat E1).

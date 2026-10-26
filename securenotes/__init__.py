@@ -15,6 +15,10 @@ def create_app(test_config=None):
     # Plenty for a 10,000-character note, even with emoji and form encoding.
     app.config["MAX_CONTENT_LENGTH"] = 256 * 1024
 
+    # Rate limiting is on unless a config explicitly turns it off. Set here on
+    # purpose: otherwise Flask-Limiter can inherit "off" from a previous app.
+    app.config["RATELIMIT_ENABLED"] = True
+
     # Session cookie hardening (threat S2):
     # HttpOnly - JavaScript can't read the cookie, so an XSS bug can't steal it.
     # SameSite=Lax - the browser won't attach it to forms submitted from other sites.
@@ -41,10 +45,11 @@ def create_app(test_config=None):
     # The instance folder holds local-only files like the database (git-ignored).
     os.makedirs(app.instance_path, exist_ok=True)
 
-    from . import db, headers
+    from . import db, headers, limiter
 
     db.init_app(app)
     headers.init_app(app)
+    limiter.init_app(app)
 
     # Every POST request must carry a valid CSRF token, or it is rejected
     # with "400 Bad Request" (threat T2). Applied app-wide so no form can be forgotten.

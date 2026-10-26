@@ -19,6 +19,9 @@ def app(tmp_path):
             # CSRF is switched off so tests can post forms directly.
             # The CSRF tests below switch it back on to prove it works.
             "WTF_CSRF_ENABLED": False,
+            # Tests log in many times from one address; test_rate_limits.py
+            # switches limiting back on to prove it works.
+            "RATELIMIT_ENABLED": False,
         }
     )
     with app.app_context():

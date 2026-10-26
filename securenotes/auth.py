@@ -16,6 +16,7 @@ from flask import (
 )
 
 from .db import get_db
+from .limiter import PER_IP, PER_USERNAME, limiter, username_key
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -49,6 +50,8 @@ def validate_registration(username, password, confirm):
 
 
 @bp.route("/register", methods=("GET", "POST"))
+# Slows anyone using "username taken" to check names in bulk (threat S5).
+@limiter.limit(PER_IP, methods=["POST"])
 def register():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
@@ -92,6 +95,10 @@ def check_password(user, password):
 
 
 @bp.route("/login", methods=("GET", "POST"))
+# Two separate limits on login attempts (threat S1). Only POSTs (actual
+# attempts) count; just opening the login page is never limited.
+@limiter.limit(PER_IP, methods=["POST"])
+@limiter.limit(PER_USERNAME, key_func=username_key, methods=["POST"])
 def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip()

@@ -15,7 +15,7 @@ A small note-taking web app built **security-first**: users register, log in, wr
 - [x] User registration and login
 - [x] Create, view, edit and delete private notes
 - [x] Share a note with another user (read-only)
-- [ ] Rate-limited login to slow down password guessing
+- [x] Rate-limited login to slow down password guessing
 - [ ] Runs in Docker
 
 ## Security approach
@@ -81,6 +81,9 @@ Decisions are recorded as they are made, with the reasoning behind them.
 38. **Sharing with an unknown username says so.** "No user with that name" reveals that a username doesn't exist. Registration already reveals the same thing, so hiding it here would protect nothing and would make typos look like successful shares. Same accepted risk as decision 18 (threat S5).
 39. **Only the owner sees who has access.** Alice sees the list of people she shared with and can remove each one. People she shares with don't see each other, so sharing with Bob never reveals Carol's username to him.
 40. **Two gatekeepers: one for reading, one for changing.** `get_readable_note()` lets in the owner *or* someone the note is shared with, and it is used **only** to view a note. Everything that changes a note (edit, delete, share, revoke) uses the stricter `get_owned_note()`. Hiding the Edit and Delete buttons from readers is just for a clean page; the server-side check is what actually stops a reader who sends those requests by hand. To test the tests, `edit` was deliberately switched to the looser check, and 2 tests failed immediately.
+41. **Login is limited per IP *and* per username, with a cooldown instead of a lockout.** 10 attempts a minute per IP address stops one machine trying many accounts (credential stuffing). 5 a minute per username stops many machines slowly guessing *one* person's password, which is the stalker case (A3). When a limit is hit, attempts get `429 Too Many Requests` for the rest of the minute. A permanent lockout was rejected because anyone could then lock any user out just by typing wrong passwords for their username (threat D1). Registration and sharing are limited per IP too, which slows bulk username checking (S5).
+42. **Limits are kept in memory and use the real connecting IP.** In-memory counting needs no extra server, but counts reset on restart and only work with one app process; a larger deployment would use Redis. The limiter deliberately ignores the `X-Forwarded-For` header, which any client can fake to get a fresh IP for every attempt.
+43. **Rate limiting is explicitly on by default.** While writing the tests, it turned out Flask-Limiter keeps its on/off switch on a shared object, so an app that doesn't set it inherits the previous app's setting. The test suite turns limiting off, and a later app silently had it off too. Every app now sets `RATELIMIT_ENABLED = True` itself, and a test checks it. A security control that can be switched off by accident needs a test proving it's on.
 
 ## Roadmap
 

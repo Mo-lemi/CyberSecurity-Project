@@ -19,6 +19,15 @@ def test_session_cookie_is_secure_by_default(monkeypatch):
     assert app.config["SESSION_COOKIE_SAMESITE"] == "Lax"
 
 
+def test_rate_limiting_is_on_by_default():
+    """The test suite switches limiting off, so check a normal app gets it back."""
+    create_app({"SECRET_KEY": "x", "RATELIMIT_ENABLED": False})
+    from securenotes.limiter import limiter
+
+    create_app({"SECRET_KEY": "x"})
+    assert limiter.enabled is True
+
+
 def test_debug_is_off_by_default():
     """Threat I5: the interactive debugger must never be on unless asked for."""
     assert not create_app({"SECRET_KEY": "x"}).debug
