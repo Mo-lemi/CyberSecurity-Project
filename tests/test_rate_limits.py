@@ -17,6 +17,7 @@ def client(tmp_path):
         {
             "SECRET_KEY": "x",
             "DATABASE": str(tmp_path / "limits.sqlite"),
+            "SECURITY_LOG": str(tmp_path / "security.log"),
             "WTF_CSRF_ENABLED": False,
         }
     )

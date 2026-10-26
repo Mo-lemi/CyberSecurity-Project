@@ -15,6 +15,7 @@ from flask import (
     url_for,
 )
 
+from .audit import log_event
 from .db import get_db
 from .limiter import PER_IP, PER_USERNAME, limiter, username_key
 
@@ -73,6 +74,7 @@ def register():
                 # The UNIQUE constraint in schema.sql rejected a duplicate username.
                 error = "That username is already taken."
             else:
+                log_event("user_registered", username=username)
                 flash("Account created. You can now log in.")
                 return redirect(url_for("auth.login"))
 
@@ -113,9 +115,12 @@ def login():
             # so nothing planted earlier carries over (threat S4).
             session.clear()
             session["user_id"] = user["id"]
+            log_event("login_succeeded", user_id=user["id"], username=username)
             return redirect(url_for("index"))
 
         # Same message whether the username or the password was wrong (threat S5).
+        # The attempted username is logged (cut short); the password never is.
+        log_event("login_failed", username=username)
         flash(LOGIN_ERROR)
 
     return render_template("auth/login.html")
@@ -125,6 +130,7 @@ def login():
 # just by embedding <img src="/auth/logout">.
 @bp.route("/logout", methods=("POST",))
 def logout():
+    log_event("logged_out")
     session.clear()
     flash("You have been logged out.")
     return redirect(url_for("index"))

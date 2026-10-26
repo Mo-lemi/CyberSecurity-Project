@@ -19,6 +19,9 @@ instance/
 *.sqlite
 *.sqlite3
 
+# Logs (may contain usernames and IP addresses)
+*.log
+
 # Editor and OS files
 .vscode/
 .idea/

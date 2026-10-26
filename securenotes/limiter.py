@@ -9,6 +9,8 @@ from flask import render_template, request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
+from .audit import log_event
+
 # Counts requests per IP address by default.
 # get_remote_address uses the address that actually connected; it deliberately
 # ignores the X-Forwarded-For header, which any client can fake.
@@ -26,6 +28,7 @@ def username_key():
 
 
 def too_many_requests(error):
+    log_event("rate_limited", path=request.path)
     return render_template("errors/429.html"), 429
 
 

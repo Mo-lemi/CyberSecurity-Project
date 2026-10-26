@@ -12,6 +12,7 @@ from flask import (
 )
 
 from .auth import login_required
+from .audit import log_event
 from .db import get_db
 from .limiter import PER_IP, limiter
 
@@ -46,6 +47,8 @@ def get_owned_note(note_id):
         (note_id, g.user["id"]),
     ).fetchone()
     if note is None:
+        # Could be a typo, or someone trying other people's note IDs (A2, A3).
+        log_event("note_access_denied", note_id=note_id, needed="owner")
         abort(404)
     return note
 
@@ -66,6 +69,7 @@ def get_readable_note(note_id):
         (note_id, g.user["id"], g.user["id"]),
     ).fetchone()
     if note is None:
+        log_event("note_access_denied", note_id=note_id, needed="read")
         abort(404)
     return note
 
@@ -173,6 +177,7 @@ def delete(note_id):
         "DELETE FROM notes WHERE id = ? AND owner_id = ?", (note_id, g.user["id"])
     )
     get_db().commit()
+    log_event("note_deleted", note_id=note_id)
     flash("Note deleted.")
     return redirect(url_for("notes.index"))
 
@@ -202,6 +207,7 @@ def share(note_id):
                 (note_id, reader["id"]),
             )
             get_db().commit()
+            log_event("note_shared", note_id=note_id, shared_with_user_id=reader["id"])
             flash(f"Shared with {username}.")
         except sqlite3.IntegrityError:
             # The (note_id, user_id) primary key rejected a duplicate share.
@@ -218,5 +224,6 @@ def revoke(note_id, user_id):
         "DELETE FROM shares WHERE note_id = ? AND user_id = ?", (note_id, user_id)
     )
     get_db().commit()
+    log_event("share_revoked", note_id=note_id, revoked_user_id=user_id)
     flash("Access removed.")
     return redirect(url_for("notes.view", note_id=note_id))

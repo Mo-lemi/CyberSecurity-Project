@@ -111,7 +111,7 @@ A trust boundary is where data crosses from something we don't control into some
 
 | ID | Threat | Attacker | Defence | Status |
 |---|---|---|---|---|
-| R1 | User denies sharing a note or logging in | A9 | **Security event log** recording logins (successful and failed), shares, unshares and deletions, with user ID and timestamp. Note contents and passwords are **never** logged. | ⬜ |
+| R1 | User denies sharing a note or logging in | A9 | **Security event log** recording logins (successful and failed), shares, unshares and deletions, with user ID and timestamp. Note contents and passwords are **never** logged. Also logs denied note access (snooping attempts, A2/A3) and rate-limit hits. One JSON object per line, so input can't forge entries (log injection). | 🔍 |
 
 ### I: Information disclosure (data leaking)
 

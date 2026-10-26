@@ -122,7 +122,13 @@ def test_logout_clears_session(make_user):
 @pytest.fixture
 def csrf_client(tmp_path):
     """A client for an app with CSRF protection switched ON, as in real use."""
-    app = create_app({"SECRET_KEY": "x", "DATABASE": str(tmp_path / "csrf.sqlite")})
+    app = create_app(
+        {
+            "SECRET_KEY": "x",
+            "DATABASE": str(tmp_path / "csrf.sqlite"),
+            "SECURITY_LOG": str(tmp_path / "security.log"),
+        }
+    )
     return app.test_client()
 
 

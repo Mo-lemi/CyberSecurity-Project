@@ -16,6 +16,7 @@ def app(tmp_path):
             "TESTING": True,
             "SECRET_KEY": "test-secret-key",
             "DATABASE": str(tmp_path / "test.sqlite"),
+            "SECURITY_LOG": str(tmp_path / "security.log"),
             # CSRF is switched off so tests can post forms directly.
             # The CSRF tests below switch it back on to prove it works.
             "WTF_CSRF_ENABLED": False,
