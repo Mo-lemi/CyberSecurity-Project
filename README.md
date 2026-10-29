@@ -24,9 +24,9 @@ A small note-taking web app built **security-first**: users register, log in, wr
 |---|---|---|
 | **Threat modelling (STRIDE)** | Identify threats to the app *before* writing code, and decide how each one is handled. See [docs/threat-model.md](docs/threat-model.md) | v1 done |
 | **OWASP Top 10** | Map each relevant OWASP risk to the defence used in the app | Planned |
-| **Secure coding** | Password hashing, CSRF protection, output escaping, parameterised SQL, access checks on every note, security headers | Done; sharing and rate limiting next |
+| **Secure coding** | Password hashing, CSRF protection, output escaping, parameterised SQL, access checks on every note, security headers | Done |
 | **DevSecOps** | GitHub Actions runs tests, a code security scanner (Bandit) and a dependency vulnerability check (pip-audit) on every push. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Done |
-| **Self-pentest** | Attack the finished app with Burp Suite and ffuf, then write up and fix the findings | Planned |
+| **Self-pentest** | Attack the finished app with Burp Suite and ffuf, then write up and fix the findings. See [docs/pentest-report.md](docs/pentest-report.md) | Done: 1 high and 2 low findings, all fixed |
 
 ## Tech stack
 
@@ -89,6 +89,8 @@ Decisions are recorded as they are made, with the reasoning behind them.
 46. **The Docker container runs as a normal user, not root.** If an attacker ever got code running inside the app, they would only have that user's rights. The app code is owned by root, so the app can run it but not change it. The only folder the app can write to is `instance/` (database and security log), which is kept on a Docker volume so notes survive restarts.
 47. **gunicorn, with one worker process.** Flask's built-in server is for development only, so the container uses gunicorn, a production server. It runs **one** process with 4 threads, because the rate limiter counts attempts in memory (decision 42): with 4 processes, each would keep its own count, and an attacker would get 4× the login attempts. Idle connections are kept open for 75 seconds: gunicorn's default of 2 seconds caused random "no response" errors when Burp Suite (acting as a proxy) reused a connection gunicorn had already closed. Found while setting up the pentest.
 48. **Secrets stay out of the image.** `.dockerignore` excludes `.env`, so the secret key is never baked into the image, where anyone with a copy could read it. The key is passed in when the container starts (`--env-file .env`). The port is published on `127.0.0.1` only, so other devices on the network can't reach the local container.
+49. **Logging out ends every session, not just the one in this browser** (pentest finding F1). Flask keeps the session inside the signed cookie, so logging out used to only make the browser forget it, and a copied cookie kept working. Each user now has a `session_version` in the database that the cookie must match, and logout increases it. I chose this over a full server-side session table because it is one column and a few lines, and easy to test. The trade-off is that logging out on one device logs you out everywhere.
+50. **Every pentest finding got an automated test.** The test repeats the attack, so if the bug ever comes back, CI fails. See [docs/pentest-report.md](docs/pentest-report.md).
 
 ## Roadmap
 

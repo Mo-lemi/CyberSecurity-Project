@@ -1,6 +1,6 @@
 # SecureNotes Threat Model (STRIDE)
 
-**Version:** 1.2 (24 October 2026). v1.0 was written before any feature code
+**Version:** 1.3 (29 October 2026). v1.0 was written before any feature code
 **Method:** [STRIDE](https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats): Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege
 
 This document answers four questions:
@@ -97,6 +97,7 @@ A trust boundary is where data crosses from something we don't control into some
 | S3 | Attacker forges a session cookie | A1 | Cookies are signed with a strong random `SECRET_KEY` kept out of Git; the app refuses to start without one | 🔍 |
 | S4 | Attacker plants a session ID before the victim logs in (session fixation) | A1 | Clear the session completely on login and logout | ✅ |
 | S5 | Attacker discovers which usernames have accounts (user enumeration) | A3, A4 | The same generic "Invalid username or password" message whether the username exists or not. **Accepted risk:** registration must say "username taken", which also reveals that the account exists; rate limiting will slow down anyone checking usernames in bulk. Login also checks a dummy hash for unknown usernames, so response *time* doesn't reveal them either. | 🔍 (login) |
+| S6 | Attacker keeps using a copied session cookie after the victim logs out | A1, A3 | Each user has a `session_version` stored in the database and in the cookie; logging out increases it, so every older cookie stops working. **Found by the self-pentest** (finding F1) | 🔍 |
 
 ### T: Tampering (changing data without permission)
 
@@ -111,7 +112,7 @@ A trust boundary is where data crosses from something we don't control into some
 
 | ID | Threat | Attacker | Defence | Status |
 |---|---|---|---|---|
-| R1 | User denies sharing a note or logging in | A9 | **Security event log** recording logins (successful and failed), shares, unshares and deletions, with user ID and timestamp. Note contents and passwords are **never** logged. Also logs denied note access (snooping attempts, A2/A3) and rate-limit hits. One JSON object per line, so input can't forge entries (log injection). | 🔍 |
+| R1 | User denies sharing a note or logging in | A9 | **Security event log** recording logins (successful and failed), shares, unshares and deletions, with user ID and timestamp. Note contents and passwords are **never** logged. Also logs denied note access (snooping attempts, A2/A3), rate-limit hits and rejected CSRF tokens (forged requests, A6). One JSON object per line, so input can't forge entries (log injection). | 🔍 |
 
 ### I: Information disclosure (data leaking)
 
@@ -148,7 +149,7 @@ Every defence above will be checked in at least one of these ways:
 
 - **Automated tests (pytest):** e.g. user B requests user A's note and must get a 404; a form posted without a CSRF token must be rejected.
 - **CI pipeline (GitHub Actions):** tests, **Bandit** (scans our code for insecure patterns) and **pip-audit** (scans dependencies) run on every push.
-- **Self-pentest:** attack the finished app with **Burp Suite** (intercept and modify requests, e.g. change note IDs, remove CSRF tokens, replay sessions) and **ffuf** (discover hidden pages). Findings will be written up in `docs/pentest-report.md`.
+- **Self-pentest:** attack the finished app with **Burp Suite** (intercept and modify requests, e.g. change note IDs, remove CSRF tokens, replay sessions) and **ffuf** (discover hidden pages). Findings are written up in [pentest-report.md](pentest-report.md).
 
 As defences are built and tested, the status columns above will be updated. Tests live in [`tests/`](../tests/); `tests/test_notes.py` holds the access-control (IDOR) tests.
 
@@ -170,3 +171,4 @@ As defences are built and tested, the status columns above will be updated. Test
 | 1.0 | 18 Oct 2026 | First version, written before feature code |
 | 1.1 | 19 Oct 2026 | Switched accounts from email to username (data minimisation); updated A4 and S5 |
 | 1.2 | 24 Oct 2026 | Added I8 (browser caching of private pages), found while adding security headers |
+| 1.3 | 29 Oct 2026 | Added S6 (cookie replay after logout), found by the self-pentest; R1 now also logs rejected CSRF tokens |
