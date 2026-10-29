@@ -29,4 +29,6 @@ EXPOSE 8000
 # then start gunicorn, a production server (Flask's own server is for development).
 # One worker process with threads: the rate limiter counts attempts in memory,
 # so several processes would each keep their own count and multiply the limit.
-CMD ["sh", "-c", "[ -f instance/securenotes.sqlite ] || python -m flask --app securenotes init-db; exec gunicorn --bind 0.0.0.0:8000 --workers 1 --threads 4 --access-logfile - 'securenotes:create_app()'"]
+# Keep-alive of 75s: gunicorn's default of 2s closed idle connections that a
+# proxy (Burp, found during the pentest) then tried to reuse, so requests failed.
+CMD ["sh", "-c", "[ -f instance/securenotes.sqlite ] || python -m flask --app securenotes init-db; exec gunicorn --bind 0.0.0.0:8000 --workers 1 --threads 4 --keep-alive 75 --access-logfile - 'securenotes:create_app()'"]
