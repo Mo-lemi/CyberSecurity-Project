@@ -132,10 +132,10 @@ Requires Docker Desktop, and a `.env` file created as in step 3 above.
 
 ```powershell
 docker build -t securenotes .
-docker run --rm --env-file .env -p 127.0.0.1:8000:8000 -v securenotes-data:/app/instance securenotes
+docker run --rm --name securenotes --env-file .env -p 127.0.0.1:8000:8000 -v securenotes-data:/app/instance securenotes
 ```
 
-Then open http://127.0.0.1:8000. The database is created on first start and kept in the `securenotes-data` volume. Stop the app with `Ctrl+C`.
+Then open http://127.0.0.1:8000. The database is created on first start and kept in the `securenotes-data` volume. Stop the app with `Ctrl+C`. To read the security event log while it runs: `docker exec securenotes cat instance/security.log`.
 
 ## Running the tests
 
