@@ -116,6 +116,29 @@ def test_logout_clears_session(make_user):
     assert b"Signed in as" not in browser.get("/").data
 
 
+def test_stolen_cookie_stops_working_after_logout(app, make_user):
+    """Pentest finding F1: replaying a copied cookie after logout used to work."""
+    alice = make_user("alice")
+    alice.post("/notes/new", data={"title": "t", "body": "b"})
+    stolen = alice.get_cookie("session").value
+
+    attacker = app.test_client()
+    attacker.set_cookie("session", stolen)
+    assert attacker.get("/notes/1").status_code == 200  # the copy works...
+
+    alice.post("/auth/logout")
+    response = attacker.get("/notes/1")  # ...until alice logs out
+    assert response.status_code == 302
+    assert "/auth/login" in response.headers["Location"]
+
+
+def test_can_log_in_again_after_logout(make_user):
+    browser = make_user("alice")
+    browser.post("/auth/logout")
+    browser.post("/auth/login", data={"username": "alice", "password": PASSWORD})
+    assert b"Signed in as" in browser.get("/").data
+
+
 # --- CSRF (threat T2) -------------------------------------------------------
 
 

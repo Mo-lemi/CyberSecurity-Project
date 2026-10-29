@@ -13,6 +13,9 @@ CREATE TABLE users (
     username      TEXT    NOT NULL UNIQUE COLLATE NOCASE,
     -- Only the argon2 hash is stored, never the password itself (threat I4).
     password_hash TEXT    NOT NULL,
+    -- Copied into the session cookie at login. Logging out adds 1, so every
+    -- older cookie (including a stolen copy) stops working (pentest finding F1).
+    session_version INTEGER NOT NULL DEFAULT 0,
     created_at    TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

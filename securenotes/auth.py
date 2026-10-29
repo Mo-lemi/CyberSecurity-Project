@@ -107,7 +107,8 @@ def login():
         password = request.form.get("password", "")
 
         user = get_db().execute(
-            "SELECT id, password_hash FROM users WHERE username = ?", (username,)
+            "SELECT id, password_hash, session_version FROM users WHERE username = ?",
+            (username,),
         ).fetchone()
 
         if check_password(user, password):
@@ -115,6 +116,7 @@ def login():
             # so nothing planted earlier carries over (threat S4).
             session.clear()
             session["user_id"] = user["id"]
+            session["session_version"] = user["session_version"]
             log_event("login_succeeded", user_id=user["id"], username=username)
             return redirect(url_for("index"))
 
@@ -130,6 +132,16 @@ def login():
 # just by embedding <img src="/auth/logout">.
 @bp.route("/logout", methods=("POST",))
 def logout():
+    # Flask keeps the session inside the signed cookie, so clearing it only makes
+    # *this* browser forget it; a copy stolen earlier would still be valid.
+    # Bumping the version makes every existing cookie for this user stop working
+    # (pentest finding F1). Side effect: logs the user out on all devices.
+    if g.user is not None:
+        get_db().execute(
+            "UPDATE users SET session_version = session_version + 1 WHERE id = ?",
+            (g.user["id"],),
+        )
+        get_db().commit()
     log_event("logged_out")
     session.clear()
     flash("You have been logged out.")
@@ -142,9 +154,12 @@ def load_logged_in_user():
     user_id = session.get("user_id")
     g.user = None
     if user_id is not None:
-        g.user = get_db().execute(
-            "SELECT id, username FROM users WHERE id = ?", (user_id,)
+        user = get_db().execute(
+            "SELECT id, username, session_version FROM users WHERE id = ?", (user_id,)
         ).fetchone()
+        # A cookie from before the last logout carries an old version: reject it.
+        if user is not None and user["session_version"] == session.get("session_version"):
+            g.user = user
 
 
 def login_required(view):
