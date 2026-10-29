@@ -4,7 +4,7 @@
 
 A small note-taking web app built **security-first**: users register, log in, write private notes, and share individual notes with other users. The features are kept deliberately small so the focus stays on threat modelling, secure coding, automated security checks and testing the app's own defences.
 
-> **Status:** ✅ Version 1 complete: all planned features, threat model, OWASP mapping, self-pentest and demo video are done.
+> **Status:** Complete
 
 ## Demo
 
