@@ -23,7 +23,7 @@ A small note-taking web app built **security-first**: users register, log in, wr
 | Activity | What it means here | Status |
 |---|---|---|
 | **Threat modelling (STRIDE)** | Identify threats to the app *before* writing code, and decide how each one is handled. See [docs/threat-model.md](docs/threat-model.md) | v1 done |
-| **OWASP Top 10** | Map each relevant OWASP risk to the defence used in the app | Planned |
+| **OWASP Top 10** | Map each relevant OWASP risk to the defence used in the app. See [docs/owasp-top10.md](docs/owasp-top10.md) | Done (2025 edition) |
 | **Secure coding** | Password hashing, CSRF protection, output escaping, parameterised SQL, access checks on every note, security headers | Done |
 | **DevSecOps** | GitHub Actions runs tests, a code security scanner (Bandit) and a dependency vulnerability check (pip-audit) on every push. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Done |
 | **Self-pentest** | Attack the finished app with Burp Suite and ffuf, then write up and fix the findings. See [docs/pentest-report.md](docs/pentest-report.md) | Done: 1 high and 2 low findings, all fixed |
