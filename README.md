@@ -16,7 +16,7 @@ A small note-taking web app built **security-first**: users register, log in, wr
 - [x] Create, view, edit and delete private notes
 - [x] Share a note with another user (read-only)
 - [x] Rate-limited login to slow down password guessing
-- [ ] Runs in Docker
+- [x] Runs in Docker
 
 ## Security approach
 
@@ -86,6 +86,9 @@ Decisions are recorded as they are made, with the reasoning behind them.
 43. **Rate limiting is explicitly on by default.** While writing the tests, it turned out Flask-Limiter keeps its on/off switch on a shared object, so an app that doesn't set it inherits the previous app's setting. The test suite turns limiting off, and a later app silently had it off too. Every app now sets `RATELIMIT_ENABLED = True` itself, and a test checks it. A security control that can be switched off by accident needs a test proving it's on.
 44. **A security event log, with no secrets in it.** `instance/security.log` records registrations, logins (successful and failed), logouts, shares, revokes, deletions, rate-limit hits and **denied attempts to open a note**. That last one is how someone trying other people's note IDs, like a stalker, would show up. Each entry has the time (UTC), IP address and user ID. Passwords and note contents are never logged, and tests check that they don't appear in the log.
 45. **Each log entry is one line of JSON.** Attacker-controlled text, such as a username typed into a failed login, is written with `json.dumps`, which turns a newline into the characters `\n`. A username like `x⏎{"event": "login_succeeded"...}` therefore can't add a fake second line to the log (log injection, CWE-117). Logged text is also cut to 50 characters, so nobody can flood the log with huge inputs.
+46. **The Docker container runs as a normal user, not root.** If an attacker ever got code running inside the app, they would only have that user's rights. The app code is owned by root, so the app can run it but not change it. The only folder the app can write to is `instance/` (database and security log), which is kept on a Docker volume so notes survive restarts.
+47. **gunicorn, with one worker process.** Flask's built-in server is for development only, so the container uses gunicorn, a production server. It runs **one** process with 4 threads, because the rate limiter counts attempts in memory (decision 42): with 4 processes, each would keep its own count, and an attacker would get 4× the login attempts.
+48. **Secrets stay out of the image.** `.dockerignore` excludes `.env`, so the secret key is never baked into the image, where anyone with a copy could read it. The key is passed in when the container starts (`--env-file .env`). The port is published on `127.0.0.1` only, so other devices on the network can't reach the local container.
 
 ## Roadmap
 
@@ -122,6 +125,17 @@ python -m flask --app securenotes run --debug
 Then open http://127.0.0.1:5000.
 
 > ⚠️ `--debug` is for local development only. Never run with it on a server (see design decision 10).
+
+## Running with Docker
+
+Requires Docker Desktop, and a `.env` file created as in step 3 above.
+
+```powershell
+docker build -t securenotes .
+docker run --rm --env-file .env -p 127.0.0.1:8000:8000 -v securenotes-data:/app/instance securenotes
+```
+
+Then open http://127.0.0.1:8000. The database is created on first start and kept in the `securenotes-data` volume. Stop the app with `Ctrl+C`.
 
 ## Running the tests
 
