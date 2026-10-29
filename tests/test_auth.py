@@ -158,3 +158,16 @@ def csrf_client(tmp_path):
 @pytest.mark.parametrize("url", ["/auth/register", "/auth/login", "/auth/logout"])
 def test_forms_without_csrf_token_are_rejected(csrf_client, url):
     assert csrf_client.post(url, data={"username": "alice"}).status_code == 400
+
+
+def test_rejected_csrf_attempts_are_logged(csrf_client, tmp_path):
+    """Pentest finding F2: forged requests were blocked but not recorded."""
+    csrf_client.post("/notes/new", data={"title": "t", "body": "b"})
+    log_text = (tmp_path / "security.log").read_text(encoding="utf-8")
+    assert '"event": "csrf_rejected"' in log_text
+    assert '"path": "/notes/new"' in log_text
+
+
+def test_html_comments_are_not_sent_to_visitors(client):
+    """Pentest finding F3: page source revealed notes about our security setup."""
+    assert b"<!--" not in client.get("/auth/login").data

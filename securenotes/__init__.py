@@ -1,7 +1,7 @@
 import os
 
-from flask import Flask, render_template
-from flask_wtf.csrf import CSRFProtect
+from flask import Flask, render_template, request, session
+from flask_wtf.csrf import CSRFError, CSRFProtect
 
 
 def create_app(test_config=None):
@@ -55,6 +55,19 @@ def create_app(test_config=None):
     # Every POST request must carry a valid CSRF token, or it is rejected
     # with "400 Bad Request" (threat T2). Applied app-wide so no form can be forgotten.
     CSRFProtect(app)
+
+    @app.errorhandler(CSRFError)
+    def csrf_rejected(error):
+        # A missing or wrong token may be a forged request from another site,
+        # so record it (pentest finding F2). This check runs before g.user is
+        # loaded, so the user ID comes straight from the session cookie.
+        audit.log_event(
+            "csrf_rejected",
+            user_id=session.get("user_id"),
+            path=request.path,
+            reason=error.description,
+        )
+        return error
 
     from . import auth, notes
 
