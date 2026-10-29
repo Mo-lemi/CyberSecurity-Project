@@ -1,0 +1,21 @@
+# Only the app code and requirements.txt go into the image.
+# Secrets: .env holds SECRET_KEY and must never be baked into an image.
+.env
+*.env
+
+# Local data, environments and tooling
+instance/
+.venv/
+venv/
+.git/
+.github/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Not needed to run the app
+tests/
+docs/
+requirements-dev.txt
+pytest.ini
+*.md
