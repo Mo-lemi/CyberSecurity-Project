@@ -4,13 +4,15 @@
 
 A small note-taking web app built **security-first**: users register, log in, write private notes, and share individual notes with other users. The features are kept deliberately small so the focus stays on threat modelling, secure coding, automated security checks and testing the app's own defences.
 
-> **Status:** 🚧 In development. This README is updated as the project grows.
+> **Status:** ✅ Version 1 complete: all planned features, threat model, OWASP mapping, self-pentest and demo video are done.
 
 ## Demo
 
-📺 Demo video: _coming soon_
+📺 **Demo video (YouTube):** https://youtu.be/GynP1_YnhvY
 
-## Features (planned)
+The video walks through the threat model, the app running in Docker, a live pentest with Burp Suite (including the session-cookie vulnerability it found and the fix), the CI pipeline and the OWASP Top 10 mapping.
+
+## Features
 
 - [x] User registration and login
 - [x] Create, view, edit and delete private notes
